@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace MoogleEngine;
 
@@ -9,6 +10,10 @@ public class IndexData {
     Dictionary<int, string> docs = new Dictionary<int, string>(); // Asignar un ID unico a cada documento
 
     public IndexData() {
+
+        // Stopwatch crono = new Stopwatch();
+        // System.Console.WriteLine("Inicio...");
+        // crono.Start();
 
         string[] files = Directory.GetFiles("../Content", "*.txt", SearchOption.AllDirectories);
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
@@ -28,6 +33,9 @@ public class IndexData {
                 words[word.Item1][i].Push(word.Item2); // Agrega una nueva ocurrencia de la palabra en el doc
             }
         }
+
+        // crono.Stop();
+        // System.Console.WriteLine("Indexado en {0}ms", crono.ElapsedMilliseconds);
 
         // DEBUGUEO DEL DICCIONARIO
         // int k = 0;
@@ -50,8 +58,28 @@ public class IndexData {
         StringBuilder temp = new StringBuilder();
         int start = 0;
         for (int i = 0; i < content.Length; i++) {
-            if (Regex.IsMatch(content[i].ToString().ToLower(), "[a-z0-9áéíóúñ]")) {
-                temp.Append(content[i].ToString().ToLower()); // Si es un caracter alfanumerico sera parte de una palabra
+
+            string c = content[i].ToString().ToLower();
+            if (Regex.IsMatch(c, "[a-z0-9áéíóúüñ]")) {
+                switch (c) {
+                    case "á":
+                        c = "a";
+                        break;
+                    case "é":
+                        c = "e";
+                        break;
+                    case "í":
+                        c = "i";
+                        break;
+                    case "ó":
+                        c = "o";
+                        break;
+                    case "ú":
+                    case "ü":
+                        c = "u";
+                        break;
+                }
+                temp.Append(c); // Si es un caracter alfanumerico sera parte de una palabra
             }
             else { // Si no, agrega la palabra formada a la lista y continua a la siguiente
                 if (temp.Length > 0) { // Para controlar el caso de dos caracteres no alfanumericos juntos
