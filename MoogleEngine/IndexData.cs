@@ -6,7 +6,7 @@ namespace MoogleEngine;
 
 public class IndexData {
 
-    Dictionary<string, Occurrences[]> words = new Dictionary<string, Occurrences[]>(); // Las apariciones de cada palabra en los docs
+    Dictionary<string, Location> words = new Dictionary<string, Location>(); // Toda la info sobre cada palabra que aparece
     Dictionary<int, string> docs = new Dictionary<int, string>(); // Asignar un ID unico a cada documento
 
     public IndexData() {
@@ -25,10 +25,11 @@ public class IndexData {
             foreach (var word in wordList) {
                 
                 if (!words.ContainsKey(word.Item1)) { // Inicializar el array de docs de cada palabra
-                    words.Add(word.Item1, new Occurrences[files.Length]);
+                    words.Add(word.Item1, new Location(files.Length));
                 }
                 if (words[word.Item1][i] == null) { // Inicializar las ocurrencias en un doc especifico
                     words[word.Item1][i] = new Occurrences(i);
+                    words[word.Item1].Amount++; // Aumentar la cantidad de documentos en que aparece la palabra
                 }
                 words[word.Item1][i].Push(word.Item2); // Agrega una nueva ocurrencia de la palabra en el doc
             }
@@ -52,10 +53,10 @@ public class IndexData {
         // }
     }
 
-    public Dictionary<string, Occurrences[]> Words { get { return words; } }
+    public Dictionary<string, Location> Words { get { return words; } }
 
     public Dictionary<int, string> Docs { get { return docs; } }
-    
+
     List<Tuple<string, int>> GetWords(string content) { // Devuelve la lista de las palabras existentes y su ubicacion
         List<Tuple<string, int>> result = new List<Tuple<string, int>> (); // <palabra, posicionDeInicio, posicionFinal + 1>
 

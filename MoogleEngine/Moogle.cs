@@ -6,6 +6,21 @@ public static class Moogle
 
     public static void Init() {
         data = new IndexData();
+
+        foreach (var pair in data.Words) {
+            
+            string word = pair.Key;
+            Location location = pair.Value;
+            
+            for (int i = 0; i < location.Size; i++) {
+                if (location[i] != null) {
+                    double idf = Math.Log2((double)(location.Size) / (double)location.Amount);
+                    location[i].Relevance = location[i].StartPos.Count * idf;
+                }
+            }
+        }
+
+        System.Console.WriteLine("✅TF-IDF's calculados");
     }
 
     public static SearchResult Query(string query) {

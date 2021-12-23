@@ -3,6 +3,7 @@ namespace MoogleEngine;
 // Representa las ocurrencias de alguna palabra en un documento especifico
 public class Occurrences {
     
+    double tfidf;
     List<int> startPos = new List<int> (); // Posiciones iniciales de cada ocurrencia
     
     public Occurrences(int id) {
@@ -14,7 +15,14 @@ public class Occurrences {
     }
 
     public int Id { get; private set; } // ID del documento analizado
-    public float Relevance { get; private set; } // La relevancia de la palabra en este documento
+    public double Relevance { // La relevancia de la palabra en este documento
+        get {
+            return tfidf;
+        }
+        set {
+            tfidf = (value == 0 ? 0.000001 : value);
+        }
+    } 
 
     public List<int> StartPos { get { return this.startPos; } }
 }
