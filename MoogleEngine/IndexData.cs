@@ -11,9 +11,9 @@ public class IndexData {
 
     public IndexData() {
 
-        // Stopwatch crono = new Stopwatch();
-        // System.Console.WriteLine("Inicio...");
-        // crono.Start();
+        Stopwatch crono = new Stopwatch();
+        System.Console.WriteLine("Inicio...");
+        crono.Start();
 
         string[] files = Directory.GetFiles("../Content", "*.txt", SearchOption.AllDirectories);
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
@@ -34,8 +34,8 @@ public class IndexData {
             }
         }
 
-        // crono.Stop();
-        // System.Console.WriteLine("Indexado en {0}ms", crono.ElapsedMilliseconds);
+        crono.Stop();
+        System.Console.WriteLine("Indexado en {0}ms", crono.ElapsedMilliseconds);
 
         // DEBUGUEO DEL DICCIONARIO
         // int k = 0;
@@ -52,6 +52,10 @@ public class IndexData {
         // }
     }
 
+    public Dictionary<string, Occurrences[]> Words { get { return words; } }
+
+    public Dictionary<int, string> Docs { get { return docs; } }
+    
     List<Tuple<string, int>> GetWords(string content) { // Devuelve la lista de las palabras existentes y su ubicacion
         List<Tuple<string, int>> result = new List<Tuple<string, int>> (); // <palabra, posicionDeInicio, posicionFinal + 1>
 

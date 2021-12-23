@@ -2,11 +2,15 @@
 
 public static class Moogle
 {
+    static IndexData data;
+
+    public static void Init() {
+        data = new IndexData();
+    }
+
     public static SearchResult Query(string query) {
         // Modifique este método para responder a la búsqueda
 
-        IndexData data = new IndexData(); // Inicializado temporal. Debe cambiarse
-        
         SearchItem[] items = new SearchItem[3] {
             new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.9f),
             new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.5f),
