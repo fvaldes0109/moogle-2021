@@ -28,10 +28,16 @@ public static class Moogle
     }
 
     public static SearchResult Query(string query) {
+        
+        string[] words = StringParser.InputParser(query);
+        SearchItem[] items = new SearchItem[0];
 
-        // Asumiendo que la entrada sera una palabra unica
-        SearchItem[] items = SearchEngine.GetOneWord(data, query, 5);
-
+        if (words.Length == 1) {
+            items = SearchEngine.GetOneWord(data, query, 5);
+        }
+        else {
+            
+        }
         return new SearchResult(items, query);
     }
 }

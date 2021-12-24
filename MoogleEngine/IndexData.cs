@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 
 namespace MoogleEngine;
@@ -64,26 +63,8 @@ public class IndexData {
         int start = 0;
         for (int i = 0; i < content.Length; i++) {
 
-            string c = content[i].ToString().ToLower();
-            if (Regex.IsMatch(c, "[a-z0-9áéíóúüñ]")) {
-                switch (c) {
-                    case "á":
-                        c = "a";
-                        break;
-                    case "é":
-                        c = "e";
-                        break;
-                    case "í":
-                        c = "i";
-                        break;
-                    case "ó":
-                        c = "o";
-                        break;
-                    case "ú":
-                    case "ü":
-                        c = "u";
-                        break;
-                }
+            char c = StringParser.IsAlphaNum(content[i]);
+            if (c != '\0') {
                 temp.Append(c); // Si es un caracter alfanumerico sera parte de una palabra
             }
             else { // Si no, agrega la palabra formada a la lista y continua a la siguiente
@@ -93,6 +74,10 @@ public class IndexData {
                 start = i + 1;
                 temp.Clear();
             }
+        }
+
+        if (temp.Length != 0) {
+            result.Add(new Tuple<string, int> (temp.ToString(), start));
         }
 
         return result;
