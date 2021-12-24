@@ -14,23 +14,23 @@ public static class Moogle
             
             for (int i = 0; i < location.Size; i++) {
                 if (location[i] != null) {
-                    double idf = Math.Log2((double)(location.Size) / (double)location.Amount);
+                    float idf = (float)Math.Log2((float)(data.Docs.Count) / (float)location.Size);
                     location[i].Relevance = location[i].StartPos.Count * idf;
                 }
             }
         }
 
-        System.Console.WriteLine("✅TF-IDF's calculados");
+        foreach (var word in data.Words) { // Ordenando las palabras por su TF-IDF
+            word.Value.Sort();
+        }
+
+        System.Console.WriteLine("✅ TF-IDF's calculados");
     }
 
     public static SearchResult Query(string query) {
-        // Modifique este método para responder a la búsqueda
 
-        SearchItem[] items = new SearchItem[3] {
-            new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.9f),
-            new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.5f),
-            new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.1f),
-        };
+        // Asumiendo que la entrada sera una palabra unica
+        SearchItem[] items = SearchEngine.GetOneWord(data, query, 5);
 
         return new SearchResult(items, query);
     }

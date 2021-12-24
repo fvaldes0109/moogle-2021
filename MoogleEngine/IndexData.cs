@@ -29,14 +29,13 @@ public class IndexData {
                 }
                 if (words[word.Item1][i] == null) { // Inicializar las ocurrencias en un doc especifico
                     words[word.Item1][i] = new Occurrences(i);
-                    words[word.Item1].Amount++; // Aumentar la cantidad de documentos en que aparece la palabra
                 }
                 words[word.Item1][i].Push(word.Item2); // Agrega una nueva ocurrencia de la palabra en el doc
             }
         }
 
         crono.Stop();
-        System.Console.WriteLine("Indexado en {0}ms", crono.ElapsedMilliseconds);
+        System.Console.WriteLine("✅ Indexado en {0}ms", crono.ElapsedMilliseconds);
 
         // DEBUGUEO DEL DICCIONARIO
         // int k = 0;
