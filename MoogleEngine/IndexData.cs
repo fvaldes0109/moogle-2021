@@ -20,6 +20,7 @@ public class IndexData {
 
             StreamReader reader = new StreamReader(files[i]);
             List<Tuple<string, int>> wordList = GetWords(reader.ReadToEnd()); // Recibe el contenido crudo
+            reader.Close();
             docs.Add(i, files[i]); // Asignar un ID al documento
             
             foreach (var word in wordList) {
