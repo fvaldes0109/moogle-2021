@@ -33,7 +33,8 @@ public static class Moogle
         SearchItem[] items = new SearchItem[0];
 
         if (words.Length == 1) {
-            items = SearchEngine.GetOneWord(data, query, 5);
+            PartialItem[] partials = SearchEngine.GetOneWord(data, query, 5);
+            items = SearchEngine.GetResults(data, partials);
         }
         else {
             
