@@ -9,5 +9,5 @@ public class PartialItem { // Representa los datos minimos de un resultado
 
     public string Word { get; private set; }
 
-    public int Document { get; private set; }
+    public int Document { get; private set; } // Es el indice del doc en la palabra, no el Id
 }

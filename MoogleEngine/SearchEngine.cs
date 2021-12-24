@@ -14,7 +14,7 @@ public static class SearchEngine {
         Location info = data.Words[word];
         for (int i = 0; i < amount && i < info.Size; i++) { // Los docs estan ordenados por TF-IDF
 
-            items.Add(new PartialItem(word, info[i].Id));
+            items.Add(new PartialItem(word, i));
         }
         return items.ToArray();
     }
@@ -28,11 +28,11 @@ public static class SearchEngine {
             
             Location info = data.Words[partials[i].Word];
 
-            string docPath = data.Docs[info[i].Id];
+            string docPath = data.Docs[info[partials[i].Document].Id];
             string[] temp = docPath.Split('/');
             string title = temp[temp.Length - 1].Split('.')[0];
 
-            int position = info[i].StartPos[0];
+            int position = info[partials[i].Document].StartPos[0];
             StreamReader reader = new StreamReader(docPath);
             string content = reader.ReadToEnd();
             reader.Close();
