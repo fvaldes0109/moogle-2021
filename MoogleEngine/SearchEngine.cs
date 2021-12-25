@@ -42,8 +42,36 @@ public static class SearchEngine {
             int end = Math.Min(position + 60, content.Length);
             snippet.Append(content[start .. end]);
 
-            items[i] = new SearchItem(title, snippet.ToString(), info[i].Relevance);
+            items[i] = new SearchItem(title, snippet.ToString(), info[partials[i].Document].Relevance);
         }
         return items;
+    }
+
+    public static PartialItem[] DocsFromPhrase(IndexData data, PartialItem[] partials, int amount) {
+        
+        // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
+        Dictionary<int, CumulativeScore> relevances = new Dictionary<int, CumulativeScore> ();
+
+        // Iterando por los resultados parciales analizados
+        foreach (var partial in partials) {
+            
+            Location info = data.Words[partial.Word];
+            // Si no se ha analizado el documento, se creara su clave
+            if (!(relevances.ContainsKey(info[partial.Document].Id))) {
+                relevances.Add(info[partial.Document].Id, new CumulativeScore());
+            }
+            relevances[info[partial.Document].Id].AddWord(info[partial.Document].Relevance, partial);
+        }
+
+        // Ordena los documentos por su relevancia total
+        var sortedRelevances = relevances.ToList();
+        sortedRelevances.OrderByDescending(x => x.Value.TotalScore);
+        
+        List<PartialItem> result = new List<PartialItem>();
+        for (int i = 0; i < amount && i < sortedRelevances.Count; i++) {
+            result.Add(sortedRelevances[i].Value.Content[0]);
+        }
+
+        return result.ToArray();
     }
 }

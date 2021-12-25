@@ -2,16 +2,19 @@
 
 public static class Moogle
 {
+
+    static int finalResults = 5;
+
     static IndexData data;
 
     public static void Init() {
         data = new IndexData();
-
         foreach (var pair in data.Words) {
             
             string word = pair.Key;
             Location location = pair.Value;
-            
+            location.RemoveNull();
+
             for (int i = 0; i < location.Size; i++) {
                 if (location[i] != null) {
                     float idf = (float)Math.Log2((float)(data.Docs.Count) / (float)location.Size);
@@ -33,12 +36,23 @@ public static class Moogle
         SearchItem[] items = new SearchItem[0];
 
         if (words.Length == 1) {
-            PartialItem[] partials = SearchEngine.GetOneWord(data, query, 5);
+            PartialItem[] partials = SearchEngine.GetOneWord(data, query, finalResults);
             items = SearchEngine.GetResults(data, partials);
         }
-        else {
-            
+        else if (words.Length > 1) {
+
+            List<PartialItem> partials = new List<PartialItem> ();
+
+            // Agregando las apariciones mas relevantes de cada palabra a una lista
+            foreach (var word in words) {
+                partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, 10)));
+            }
+            PartialItem[] partialResults = SearchEngine.DocsFromPhrase(data, partials.ToArray(), finalResults);
+            items = SearchEngine.GetResults(data, partialResults);
         }
+        // foreach (var item in items) {
+        //     System.Console.WriteLine("Titulo: {0} - Score: {1}", item.Title, item.Score);
+        // }
         return new SearchResult(items, query);
     }
 }
