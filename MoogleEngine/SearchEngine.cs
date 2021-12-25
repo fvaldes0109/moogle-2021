@@ -64,8 +64,7 @@ public static class SearchEngine {
         }
 
         // Ordena los documentos por su relevancia total
-        var sortedRelevances = relevances.ToList();
-        sortedRelevances.OrderByDescending(x => x.Value.TotalScore);
+        var sortedRelevances = relevances.OrderByDescending(x => x.Value.TotalScore).ToList();
         
         List<PartialItem> result = new List<PartialItem>();
         for (int i = 0; i < amount && i < sortedRelevances.Count; i++) {
