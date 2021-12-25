@@ -22,11 +22,20 @@ public static class SearchEngine {
     // Genera la lista de resultados finales
     public static SearchItem[] GetResults(IndexData data, PartialItem[] partials) {
 
-        SearchItem[] items = new SearchItem[partials.Length];
+        List<SearchItem> items = new List<SearchItem>();
 
+        bool hasRelevant = false;
         for (int i = 0; i < partials.Length; i++) {
             
             Location info = data.Words[partials[i].Word];
+
+            // Si aparece un elemento de relevancia muuuy baja, los siguientes tambien lo seran
+            if (info[partials[i].Document].Relevance < 0.0001f && hasRelevant) {
+                return items.ToArray();
+            }
+            else if (info[partials[i].Document].Relevance > 0.0001f) {
+                hasRelevant = true;
+            }
 
             string docPath = data.Docs[info[partials[i].Document].Id];
             string[] temp = docPath.Split('/');
@@ -42,11 +51,12 @@ public static class SearchEngine {
             int end = Math.Min(position + 60, content.Length);
             snippet.Append(content[start .. end]);
 
-            items[i] = new SearchItem(title, snippet.ToString(), info[partials[i].Document].Relevance);
+            items.Add(new SearchItem(title, snippet.ToString(), info[partials[i].Document].Relevance));
         }
-        return items;
+        return items.ToArray();
     }
 
+    // Devuelve los resultados parciales de una query frase
     public static PartialItem[] DocsFromPhrase(IndexData data, PartialItem[] partials, int amount) {
         
         // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
@@ -68,7 +78,18 @@ public static class SearchEngine {
         
         List<PartialItem> result = new List<PartialItem>();
         for (int i = 0; i < amount && i < sortedRelevances.Count; i++) {
-            result.Add(sortedRelevances[i].Value.Content[0]);
+            
+            float maxScore = 0.0f;
+            int maxIndex = 0;
+            var content = sortedRelevances[i].Value.Content;
+            // Buscando la palabra de mayor score entre las que contiene el documento
+            for (int j = 0; j < content.Count; j++) {
+                if (data.Words[content[j].Word][content[j].Document].Relevance > maxScore) {
+                    maxScore = data.Words[content[j].Word][content[j].Document].Relevance;
+                    maxIndex = j;
+                }
+            }
+            result.Add(sortedRelevances[i].Value.Content[maxIndex]);
         }
 
         return result.ToArray();
