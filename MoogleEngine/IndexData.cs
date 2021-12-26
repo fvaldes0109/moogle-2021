@@ -5,8 +5,15 @@ namespace MoogleEngine;
 
 public class IndexData {
 
+    // Representa el limite de palabras a las que puede apuntar una subpalabra
+    // Con 300 esta garantizado que las palabras de 12 letras puedan tener 3 fallos sin margen de error
+    int suggestionLimit = 300;
+
     Dictionary<string, Location> words = new Dictionary<string, Location>(); // Toda la info sobre cada palabra que aparece
     Dictionary<int, string> docs = new Dictionary<int, string>(); // Asignar un ID unico a cada documento
+
+    // Cada palabra recortada apunta a su palabra original y al hecho de si es un lexema o no
+    Dictionary<string, List<string>> variations = new Dictionary<string, List<string>>();
 
     public IndexData() {
 
@@ -26,6 +33,10 @@ public class IndexData {
                 
                 if (!words.ContainsKey(word.Item1)) { // Inicializar el array de docs de cada palabra
                     words.Add(word.Item1, new Location(files.Length));
+                    // Borrando las derivadas anteriores
+                    adding.Clear();
+                    used.Clear();
+                    PushDerivates(word.Item1); // Guardar las palabras derivadas en 'variations'
                 }
                 if (words[word.Item1][i] == null) { // Inicializar las ocurrencias en un doc especifico
                     words[word.Item1][i] = new Occurrences(i);
@@ -36,25 +47,13 @@ public class IndexData {
 
         crono.Stop();
         System.Console.WriteLine("✅ Indexado en {0}ms", crono.ElapsedMilliseconds);
-
-        // DEBUGUEO DEL DICCIONARIO
-        // int k = 0;
-        // foreach (var item in words) {
-        //     k++;
-        //     if (k == 40) break;
-
-        //     System.Console.WriteLine(item.Key + ": ");
-        //     foreach (var occ in item.Value) {
-        //         if (occ != null) {
-        //             System.Console.WriteLine("\t: {0}, {1}", occ.Id, occ.StartPos.Count);
-        //         }
-        //     }
-        // }
     }
 
     public Dictionary<string, Location> Words { get { return words; } }
 
     public Dictionary<int, string> Docs { get { return docs; } }
+
+    public Dictionary<string, List<string>> Variations { get { return variations; } }
 
     List<Tuple<string, int>> GetWords(string content) { // Devuelve la lista de las palabras existentes y su ubicacion
         List<Tuple<string, int>> result = new List<Tuple<string, int>> (); // <palabra, posicionDeInicio, posicionFinal + 1>
@@ -81,5 +80,52 @@ public class IndexData {
         }
 
         return result;
+    }
+
+    List<string> adding = new List<string>(); // Para llevar la cuenta de las subpalabras generadas
+    HashSet<string> used = new HashSet<string>(); // Para asegurar que no se repitan subpalabras
+    // Metodo para generar y almacenar las derivadas de una palabra
+    void PushDerivates(string original, int pos = -1) {
+        
+        // Breakers para dejar de generar (REVISAR)
+        if (pos == adding.Count) return;
+        if (adding.Count > 0 && adding[adding.Count - 1].Length * 2 - 1 <= original.Length) return;
+        if (adding.Count > 0 && adding[adding.Count - 1].Length + 4 <= original.Length) return;
+
+        if (pos == -1) { // Caso para generar desde la palabra original
+            GenerateSubStrings(original, original);
+            pos = 0;
+        }
+        else { // Caso para generar desde las subpalabras ya generadas
+            int startingCount = adding.Count;
+            for (; pos < startingCount; pos++) {
+                GenerateSubStrings(original, adding[pos]);
+            }
+        }
+
+        if (adding.Count < suggestionLimit) { // Mientras no se haya superado el limite de generaciones
+            PushDerivates(original, pos);
+        }
+    }
+
+    // Dada una palabra, quitarle 1 caracter de cada posicion y almacenarla
+    void GenerateSubStrings(string original, string subword) {
+        
+        // Iterando por cada posicion
+        for (int i = 0; i < subword.Length && adding.Count < suggestionLimit; i++) {
+
+            string derivate = subword.Remove(i, 1);
+
+            // Si no se ha evaluado nunca, inicializar la lista
+            if (!(variations.ContainsKey(derivate))) {
+                variations[derivate] = new List<string>();
+            }
+            // Si no se ha usado la subpalabra para la original actual:
+            if (!(used.Contains(derivate))) {
+                adding.Add(derivate);
+                variations[derivate].Add(original);
+                used.Add(derivate);
+            }
+        }
     }
 }
