@@ -7,7 +7,7 @@ public static class StringParser { // Clase para el manejo y formateo de strings
 
     public static char IsAlphaNum(char car) { // Revisa si es un caracter alfanumerico valido
         string c = car.ToString().ToLower();
-        if (Regex.IsMatch(c, "[a-z0-9áéíóúüç]")) {
+        if (Regex.IsMatch(c, "[a-z0-9áéíóúüçñ]")) {
             switch (c) {
                 case "á":
                     c = "a";
