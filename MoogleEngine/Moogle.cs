@@ -35,11 +35,7 @@ public static class Moogle
         string[] words = StringParser.InputParser(query);
         SearchItem[] items = new SearchItem[0];
 
-        if (words.Length == 1) {
-            PartialItem[] partials = SearchEngine.GetOneWord(data, query, finalResults);
-            items = SearchEngine.GetResults(data, partials);
-        }
-        else if (words.Length > 1) {
+        if (words.Length >= 1) {
 
             List<PartialItem> partials = new List<PartialItem> ();
 
