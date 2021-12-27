@@ -5,7 +5,7 @@ public static class Moogle
 
     static int finalResults = 10; // Cantidad de resultados a mostrar en la pagina
 
-    static int minForSuggestion = 1; // Cantidad de resultados minimas para que no salte una sugerencia
+    static int minForSuggestion = 2; // Cantidad de resultados minimas para que no salte una sugerencia
 
     static IndexData data;
 
@@ -44,7 +44,7 @@ public static class Moogle
 
             // Agregando las apariciones mas relevantes de cada palabra a una lista
             foreach (var word in words) {
-                partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, 1)));
+                partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, minForSuggestion)));
             }
             PartialItem[] partialResults = SearchEngine.DocsFromPhrase(data, partials.ToArray(), finalResults);
             items = SearchEngine.GetResults(data, partialResults);
