@@ -36,6 +36,7 @@ public static class Moogle
 
         string[] words = StringParser.InputParser(query);
         SearchItem[] items = new SearchItem[0];
+        string suggestions = "";
 
         if (words.Length >= 1) {
 
@@ -47,10 +48,33 @@ public static class Moogle
             }
             PartialItem[] partialResults = SearchEngine.DocsFromPhrase(data, partials.ToArray(), finalResults);
             items = SearchEngine.GetResults(data, partialResults);
+            // Generando el string de sugerencias para mostrar
+            suggestions = GenerateSuggestionString(words, partialResults);
         }
         // foreach (var item in items) {
         //     System.Console.WriteLine("Titulo: {0} - Score: {1}", item.Title, item.Score);
         // }
-        return new SearchResult(items, query);
+
+
+        return new SearchResult(items, suggestions);
+    }
+
+    static string GenerateSuggestionString(string[] words, PartialItem[] partials) {
+
+        bool changed = false; // Para saber si el string original sera modificado
+        foreach (var partial in partials) {
+            if (partial.Original != "") { 
+                
+                int pos = ArrayOperation.Find(words, partial.Original);
+                if (pos != -1) {
+                    changed = true;
+                    words[pos] = partial.Word;
+                }
+            }
+        }
+        if (changed) {
+            return ArrayOperation.String(words);
+        }
+        else return "@null";
     }
 }

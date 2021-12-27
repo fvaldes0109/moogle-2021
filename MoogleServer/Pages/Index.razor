@@ -8,7 +8,7 @@
 
 <button type="default" class="btn btn-primary" @onclick="RunQuery">🔍 Buscar</button>
 
-@if (!string.IsNullOrEmpty(result.Suggestion)) {
+@if (!string.IsNullOrEmpty(result.Suggestion) && result.Suggestion != "@null") {
     <div class="suggestion">
         <p>¿Quisiste decir <strong><a href="#">@result.Suggestion</a></strong>?</p>
     </div>
