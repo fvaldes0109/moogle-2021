@@ -3,7 +3,9 @@
 public static class Moogle
 {
 
-    static int finalResults = 5;
+    static int finalResults = 10; // Cantidad de resultados a mostrar en la pagina
+
+    static int minForSuggestion = 1; // Cantidad de resultados minimas para que no salte una sugerencia
 
     static IndexData data;
 
@@ -31,7 +33,7 @@ public static class Moogle
     }
 
     public static SearchResult Query(string query) {
-        
+
         string[] words = StringParser.InputParser(query);
         SearchItem[] items = new SearchItem[0];
 
@@ -41,7 +43,7 @@ public static class Moogle
 
             // Agregando las apariciones mas relevantes de cada palabra a una lista
             foreach (var word in words) {
-                partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, data.Docs.Count)));
+                partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, 1)));
             }
             PartialItem[] partialResults = SearchEngine.DocsFromPhrase(data, partials.ToArray(), finalResults);
             items = SearchEngine.GetResults(data, partialResults);

@@ -13,7 +13,7 @@ public class CumulativeScore {
     public List<PartialItem> Content { get; private set; }
 
     public void AddWord(float score, PartialItem partial) {
-        this.TotalScore += score;
+        this.TotalScore += score * partial.Multiplier;
         this.Content.Add(partial);
     }
 }

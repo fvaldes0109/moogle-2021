@@ -4,19 +4,74 @@ namespace MoogleEngine;
 
 public static class SearchEngine {
 
-    public static PartialItem[] GetOneWord(IndexData data, string word, int amount) { // Busca los docs mas relevantes que contengan la palabra
+    // Busca los docs mas relevantes que contengan la palabra
+    // MinAcceptable indica la cantidad minima de resultados para no generar sugerencias
+    public static PartialItem[] GetOneWord(IndexData data, string word, int minAcceptable, float multiplier = 1.0f, string original = "") { 
 
         List<PartialItem> items = new List<PartialItem> ();
 
         if (!(data.Words.ContainsKey(word))) { // Si la palabra no existe...
-            return items.ToArray();
+            Tuple<string, float> suggestion = GetSuggestions(data, word);
+            if (suggestion.Item1 != "") {
+                items.AddRange(GetOneWord(data, suggestion.Item1, 0, suggestion.Item2, word));
+            }
         }
-        Location info = data.Words[word];
-        for (int i = 0; i < amount && i < info.Size; i++) { // Los docs estan ordenados por TF-IDF
+        else {
+            Location info = data.Words[word];
+            for (int i = 0; i < data.Docs.Count && i < info.Size; i++) { // Los docs estan ordenados por TF-IDF
 
-            items.Add(new PartialItem(word, i));
+                items.Add(new PartialItem(word, i, multiplier, original));
+            }
+            if (items.Count < minAcceptable) {
+                Tuple<string, float> suggestion = GetSuggestions(data, word);
+                if (suggestion.Item1 != "") {
+                    items.AddRange(GetOneWord(data, suggestion.Item1, 0, suggestion.Item2, word));
+                }
+            }
         }
         return items.ToArray();
+    }
+
+    // Genera la mejor sugerencia para una palabra. Devuelve la palabra y el multiplicador
+    static Tuple<string, float> GetSuggestions(IndexData data, string word) {
+
+        // Aqui van todas las derivadas de 'word'
+        List<string> derivates = SubWords.GetDerivates(word);
+        // Aqui se acumulara el score total de cada sugerencia para determinar la mejor
+        Dictionary<string, float> cumulativeWord = new Dictionary<string, float>();
+        
+        // Buscando entre cada derivada
+        foreach (string subword in derivates) {
+            if (data.Variations.ContainsKey(subword)) {
+                // Buscando entre cada posible origen de la derivada actual
+                foreach (string possibleOrigin in data.Variations[subword]) {
+                    // Hallando la distancia entre la palabra escrita y la sugerencia
+                    float mult = 1.0f / (float)SubWords.Distance(word, possibleOrigin);
+                    // Calculando los TF-IDF de la sugerencia en cada doc
+                    PartialItem[] suggestionScores = GetOneWord(data, possibleOrigin, 0, mult, word);
+
+                    // Calculando el score total de cada sugerencia
+                    foreach (var partial in suggestionScores) {
+                        
+                        if (!(cumulativeWord.ContainsKey(partial.Word))) {
+                            cumulativeWord[partial.Word] = data.Words[partial.Word][partial.Document].Relevance * partial.Multiplier;
+                        }
+                        else {
+                            cumulativeWord[partial.Word] += data.Words[partial.Word][partial.Document].Relevance * partial.Multiplier;
+                        }
+                    }
+                }
+            }
+        }
+        if (cumulativeWord.Count > 0) {
+            //Determinando la sugerencia de mayor relevancia
+            string result = cumulativeWord.OrderByDescending(x => x.Value).ToList()[0].Key;
+            float finalMult = 1.0f / (float)SubWords.Distance(result, word);
+            return new Tuple<string, float> (result, finalMult);
+        }
+        else {
+            return new Tuple<string, float>("", 0.0f);
+        }
     }
 
     // Genera la lista de resultados finales

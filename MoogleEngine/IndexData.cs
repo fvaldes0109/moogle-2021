@@ -5,10 +5,6 @@ namespace MoogleEngine;
 
 public class IndexData {
 
-    // Representa el limite de palabras a las que puede apuntar una subpalabra
-    // Con 300 esta garantizado que las palabras de 12 letras puedan tener 3 fallos sin margen de error
-    int suggestionLimit = 300;
-
     Dictionary<string, Location> words = new Dictionary<string, Location>(); // Toda la info sobre cada palabra que aparece
     Dictionary<int, string> docs = new Dictionary<int, string>(); // Asignar un ID unico a cada documento
 
@@ -33,10 +29,7 @@ public class IndexData {
                 
                 if (!words.ContainsKey(word.Item1)) { // Inicializar el array de docs de cada palabra
                     words.Add(word.Item1, new Location(files.Length));
-                    // Borrando las derivadas anteriores
-                    adding.Clear();
-                    used.Clear();
-                    PushDerivates(word.Item1); // Guardar las palabras derivadas en 'variations'
+                    GetSubwords(word.Item1);
                 }
                 if (words[word.Item1][i] == null) { // Inicializar las ocurrencias en un doc especifico
                     words[word.Item1][i] = new Occurrences(i);
@@ -82,50 +75,16 @@ public class IndexData {
         return result;
     }
 
-    List<string> adding = new List<string>(); // Para llevar la cuenta de las subpalabras generadas
-    HashSet<string> used = new HashSet<string>(); // Para asegurar que no se repitan subpalabras
-    // Metodo para generar y almacenar las derivadas de una palabra
-    void PushDerivates(string original, int pos = -1) {
+    // Metodo para insertar las subpalabras derivadas de la palabra dada
+    void GetSubwords(string word) {
         
-        // Breakers para dejar de generar (REVISAR)
-        if (pos == adding.Count) return;
-        if (adding.Count > 0 && adding[adding.Count - 1].Length * 2 - 1 <= original.Length) return;
-        if (adding.Count > 0 && adding[adding.Count - 1].Length + 4 <= original.Length) return;
-
-        if (pos == -1) { // Caso para generar desde la palabra original
-            GenerateSubStrings(original, original);
-            pos = 0;
-        }
-        else { // Caso para generar desde las subpalabras ya generadas
-            int startingCount = adding.Count;
-            for (; pos < startingCount; pos++) {
-                GenerateSubStrings(original, adding[pos]);
+        List<string> derivates = SubWords.GetDerivates(word);
+        foreach (string subword in derivates) {
+            
+            if (!(variations.ContainsKey(subword))) {
+                variations[subword] = new List<string>();
             }
-        }
-
-        if (adding.Count < suggestionLimit) { // Mientras no se haya superado el limite de generaciones
-            PushDerivates(original, pos);
-        }
-    }
-
-    // Dada una palabra, quitarle 1 caracter de cada posicion y almacenarla
-    void GenerateSubStrings(string original, string subword) {
-        
-        // Iterando por cada posicion
-        for (int i = 0; i < subword.Length && adding.Count < suggestionLimit; i++) {
-
-            string derivate = subword.Remove(i, 1);
-
-            // Si no se ha evaluado nunca, inicializar la lista
-            if (!(variations.ContainsKey(derivate))) {
-                variations[derivate] = new List<string>();
-            }
-            // Si no se ha usado la subpalabra para la original actual:
-            if (!(used.Contains(derivate))) {
-                adding.Add(derivate);
-                variations[derivate].Add(original);
-                used.Add(derivate);
-            }
+            variations[subword].Add(word);
         }
     }
 }
