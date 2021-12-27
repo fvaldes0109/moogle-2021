@@ -46,19 +46,13 @@ public static class SearchEngine {
                 // Buscando entre cada posible origen de la derivada actual
                 foreach (string possibleOrigin in data.Variations[subword]) {
                     // Hallando la distancia entre la palabra escrita y la sugerencia
-                    float mult = 1.0f / (float)SubWords.Distance(word, possibleOrigin);
+                    float priority = 1.0f - (float)SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
                     // Calculando los TF-IDF de la sugerencia en cada doc
-                    PartialItem[] suggestionScores = GetOneWord(data, possibleOrigin, 0, mult, word);
-
-                    // Calculando el score total de cada sugerencia
-                    foreach (var partial in suggestionScores) {
-                        
-                        if (!(cumulativeWord.ContainsKey(partial.Word))) {
-                            cumulativeWord[partial.Word] = data.Words[partial.Word][partial.Document].Relevance * partial.Multiplier;
-                        }
-                        else {
-                            cumulativeWord[partial.Word] += data.Words[partial.Word][partial.Document].Relevance * partial.Multiplier;
-                        }
+                    if (!(cumulativeWord.ContainsKey(possibleOrigin))) {
+                        cumulativeWord[possibleOrigin] = priority;
+                    }
+                    else {
+                        cumulativeWord[possibleOrigin] += priority;
                     }
                 }
             }
