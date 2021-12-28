@@ -44,9 +44,9 @@ public static class Moogle
 
             // Agregando las apariciones mas relevantes de cada palabra a una lista
             foreach (var word in words) {
-                partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, minForSuggestion)));
+                partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, minForSuggestion, sameRoot: true)));
             }
-            PartialItem[] partialResults = SearchEngine.DocsFromPhrase(data, partials.ToArray(), finalResults);
+            PartialItem[] partialResults = SearchEngine.DocsFromPhrase(data, words, partials.ToArray(), finalResults);
             items = SearchEngine.GetResults(data, partialResults);
             // Generando el string de sugerencias para mostrar
             suggestions = GenerateSuggestionString(words, partialResults);

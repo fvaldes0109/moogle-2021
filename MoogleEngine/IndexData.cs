@@ -8,8 +8,11 @@ public class IndexData {
     Dictionary<string, Location> words = new Dictionary<string, Location>(); // Toda la info sobre cada palabra que aparece
     Dictionary<int, string> docs = new Dictionary<int, string>(); // Asignar un ID unico a cada documento
 
-    // Cada palabra recortada apunta a su palabra original y al hecho de si es un lexema o no
+    // Cada palabra recortada apunta a su palabra original
     Dictionary<string, List<string>> variations = new Dictionary<string, List<string>>();
+
+    // Cada lexema apuntara a su palabra original
+    Dictionary<string, List<string>> lexems = new Dictionary<string, List<string>>();
 
     public IndexData() {
 
@@ -30,6 +33,7 @@ public class IndexData {
                 if (!words.ContainsKey(word.Item1)) { // Inicializar el array de docs de cada palabra
                     words.Add(word.Item1, new Location(files.Length));
                     GetSubwords(word.Item1);
+                    GetLexems(word.Item1);
                 }
                 if (words[word.Item1][i] == null) { // Inicializar las ocurrencias en un doc especifico
                     words[word.Item1][i] = new Occurrences(i);
@@ -47,6 +51,8 @@ public class IndexData {
     public Dictionary<int, string> Docs { get { return docs; } }
 
     public Dictionary<string, List<string>> Variations { get { return variations; } }
+
+    public Dictionary<string, List<string>> Lexems { get { return lexems; } }
 
     List<Tuple<string, int>> GetWords(string content) { // Devuelve la lista de las palabras existentes y su ubicacion
         List<Tuple<string, int>> result = new List<Tuple<string, int>> (); // <palabra, posicionDeInicio, posicionFinal + 1>
@@ -85,6 +91,18 @@ public class IndexData {
                 variations[subword] = new List<string>();
             }
             variations[subword].Add(word);
+        }
+    }
+
+    void GetLexems(string word) {
+
+        List<string> prefixes = SubWords.GetPrefixes(word);
+        foreach (string prefix in prefixes) {
+            
+            if (!(lexems.ContainsKey(prefix))) {
+                lexems[prefix] = new List<string>();
+            }
+            lexems[prefix].Add(word);
         }
     }
 }
