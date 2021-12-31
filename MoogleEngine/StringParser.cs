@@ -31,28 +31,41 @@ public static class StringParser { // Clase para el manejo y formateo de strings
         return '\0';
     }
 
-    public static string[] InputParser(string input) { // Devuelve la lista de palabras de la entrada
+    public static ParsedInput InputParser(string input) { // Devuelve la lista de palabras de la entrada
         
-        List<string> list = new List<string>();
+        ParsedInput result = new ParsedInput();
+
+        // List<string> words = new List<string>(); // Almacena cada palabra
+        // List<string> operators = new List<string>(); // Almacena los operadores de cada palabra
 
         StringBuilder word = new StringBuilder();
         foreach (char c in input) {
 
+            if (c == '!' || c == '^' || c == '*') { // Si el caracter es un operador
+                result.PushOperator(c);
+            }
+            else if (c == '~') { // Si es el operador ~
+                result.PushTilde();
+            }
+
             char parse = IsAlphaNum(c);
-            if (parse != '\0') {
+
+            if (parse != '\0') { // Si es alfanumerico, agregarlo a la palabra actual
                 word.Append(parse);
             }
             else {
-                if (word.Length > 0) {
-                    list.Add(word.ToString());
+                if (word.Length > 0) { // Si no, termina la palabra y la agrega a la lista
+                    result.Words.Add(word.ToString());
                     word.Clear();
                 }
             }
         }
-        if (word.Length != 0) {
-            list.Add(word.ToString());
+        if (word.Length != 0) { // Guardando la ultima palabra
+            result.Words.Add(word.ToString());
         }
+        
+        result.TrimEnd(); // Eliminando los posibles operadores sobrantes al final y ajustando tamaños
 
-        return list.ToArray();
+        return result;
     }
 }
