@@ -38,8 +38,7 @@ public static class Moogle
         ParsedInput parsedInput = StringParser.InputParser(query);
         string[] words = parsedInput.Words.ToArray();
 
-        SearchItem[] items = new SearchItem[0];
-        string suggestions = "";
+        SearchResult result = new SearchResult();
 
         if (words.Length >= 1) {
 
@@ -49,17 +48,17 @@ public static class Moogle
             foreach (var word in words) {
                 partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, minForSuggestion, sameRoot: true)));
             }
-            PartialItem[] partialResults = SearchEngine.DocsFromPhrase(data, words, partials.ToArray(), finalResults);
-            items = SearchEngine.GetResults(data, partialResults);
+            List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials.ToArray(), finalResults);
+
+            result = SearchEngine.GetResults(data, partialResults);
             // Generando el string de sugerencias para mostrar
-            suggestions = GenerateSuggestionString(words, partialResults);
+            // suggestions = GenerateSuggestionString(words, partialResults);
         }
         // foreach (var item in items) {
         //     System.Console.WriteLine("Titulo: {0} - Score: {1}", item.Title, item.Score);
         // }
 
-
-        return new SearchResult(items, suggestions);
+        return result;
     }
 
     static string GenerateSuggestionString(string[] words, PartialItem[] partials) {
