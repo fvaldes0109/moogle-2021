@@ -35,9 +35,6 @@ public static class StringParser { // Clase para el manejo y formateo de strings
         
         ParsedInput result = new ParsedInput();
 
-        // List<string> words = new List<string>(); // Almacena cada palabra
-        // List<string> operators = new List<string>(); // Almacena los operadores de cada palabra
-
         StringBuilder word = new StringBuilder();
         foreach (char c in input) {
 

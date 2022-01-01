@@ -51,6 +51,12 @@ public class ParsedInput {
 
     // Elimina los posibles operadores sobrantes al final e iguala los tamaños de las listas
     public void TrimEnd() {
+        // Si no hay ninguna palabra, eliminar todos los operadores
+        if (this.Words.Count == 0) {
+            this.Operators = new List<string>();
+            this.Tildes = new List<bool>();
+            return;
+        }
         // Eliminando los operadores !*^
         if (this.Operators.Count > this.Words.Count) {
             this.Operators.RemoveAt(this.Operators.Count - 1);
