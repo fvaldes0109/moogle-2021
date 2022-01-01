@@ -48,15 +48,10 @@ public static class Moogle
             foreach (var word in words) {
                 partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, minForSuggestion, sameRoot: true)));
             }
-            List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials.ToArray(), finalResults);
+            List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials, finalResults);
 
             result = SearchEngine.GetResults(data, partialResults, words);
-            // Generando el string de sugerencias para mostrar
-            // suggestions = GenerateSuggestionString(words, partialResults);
         }
-        // foreach (var item in items) {
-        //     System.Console.WriteLine("Titulo: {0} - Score: {1}", item.Title, item.Score);
-        // }
 
         return result;
     }

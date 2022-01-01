@@ -117,7 +117,7 @@ public static class SearchEngine {
     }
 
     // Devuelve una lista ordenada
-    public static List<CumulativeScore> DocsFromPhrase(IndexData data, PartialItem[] partials, int amount) {
+    public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, int amount) {
 
         // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
         Dictionary<int, CumulativeScore> relevances = new Dictionary<int, CumulativeScore> ();
