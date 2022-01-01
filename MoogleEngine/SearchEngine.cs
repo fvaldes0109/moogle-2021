@@ -7,6 +7,9 @@ public static class SearchEngine {
     // El score minimo necesario para que un documento se muestre
     static float minScore = 0.0001f; 
 
+    // La cantidad de caracteres que tendra el snippet
+    static int snippetWidth = 150; 
+
     // Busca los docs mas relevantes que contengan la palabra
     // MinAcceptable indica la cantidad minima de resultados para no generar sugerencias
     public static PartialItem[] GetOneWord(IndexData data, string word, int minAcceptable, float multiplier = 1.0f, string original = "", bool sameRoot = false) { 
@@ -52,7 +55,7 @@ public static class SearchEngine {
 
         // Aqui va la lista de resultados
         List<SearchItem> items = new List<SearchItem>();
-        // Aqui van las palabras encontradas en los documentos
+        // Aqui van las palabras encontradas en los documentos. Se usara para las sugerencias
         HashSet<string> existingWords = new HashSet<string>();
         string suggestions = "";
 
@@ -69,13 +72,16 @@ public static class SearchEngine {
             string title = temp[temp.Length - 1].Split('.')[0];
 
             float docScore = docsData[i].TotalScore; // Score del doc
-            StringBuilder snippet = new StringBuilder(); // Aqui ira el snippet
 
             if (docScore <= minScore && hasRelevant) continue; // Si el documento es poco relevante, saltarselo
             else if (docScore > minScore) {
                 hasRelevant = true;
             }
-            List<string> docWords = new List<string>(); // Las palabras encontradas en el doc
+            
+            // Asocia a cada posicion del doc (que tenga una palabra buscada) su respectiva palabra
+            Dictionary<int, string> words = new Dictionary<int, string>();
+            // Guarda todas las posiciones ocupadas. SortedSet para buscar rangos mas facilmente
+            SortedSet<int> positions = new SortedSet<int>();
 
             // Revisando entre todas las palabras que aparecen en el documento
             foreach (var partial in docsData[i].Content) {
@@ -88,12 +94,17 @@ public static class SearchEngine {
                 if (occurrences.Relevance < minScore) continue;
 
                 existingWords.Add(partial.Word);
-
-                snippet.Append(GetSnippet(docPath, occurrences.StartPos[0]));
-                snippet.Append(" ... ");
+                
+                // Guardando las ocurrencias de la palabra en el doc
+                foreach (var pos in occurrences.StartPos) {
+                    if (!positions.Contains(pos)) {
+                        words.Add(pos, partial.Word);
+                        positions.Add(pos);
+                    }
+                }
             }
-            // Removiendo el ultimo '\n' del snippet
-            snippet.Remove(snippet.Length - 4, 4);
+            string snippet = GetSnippet(docPath, words, positions);
+
             // Creando el SearchItem correspondiente a este doc
             items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore));
         }
@@ -195,18 +206,75 @@ public static class SearchEngine {
         return results;
     }
 
-    // Dada una ruta y una posicion, obtiene el snippet deseado
-    static string GetSnippet(string docPath, int position) {
+    // Dado un conjunto de posiciones y sus palabras, obtiene el snippet con mas palabras
+    static string GetSnippet(string docPath, Dictionary<int, string> words, SortedSet<int> positions) {
 
         StreamReader reader = new StreamReader(docPath);
         string content = reader.ReadToEnd();
         reader.Close();
         
-        StringBuilder snippet = new StringBuilder();
-        int start = Math.Max(0, position - 60);
-        int end = Math.Min(position + 60, content.Length);
-        snippet.Append(content[start .. end]);
+        int maxPoints = 1; // El maximo de palabras en una vecindad
+        int pivot = positions.ElementAt(0); // El pivote de la vecindad
 
-        return snippet.ToString();
+        // Recorriendo todas las posiciones con palabras
+        foreach (int pos in positions) {
+
+            // Calculando la cantidad de puntos en la vecindad
+            int points = GetZone(pos, positions, words, content.Length);
+
+            if (maxPoints < points) {
+                maxPoints = points;
+                pivot = pos;
+            }
+        }
+
+        string snippet = "";
+
+        int left, right; // Los limites de la vecindad
+
+        // Calculando los limites
+        if (pivot - snippetWidth / 4 < 0) { // Si el punto esta muy al comienzo del doc
+            left = 0;
+            right = snippetWidth;
+        }
+        else if (pivot + snippetWidth - snippetWidth / 4 >= content.Length) { // Si esta muy al final
+            right = content.Length - 1;
+            left = content.Length - snippetWidth;
+        }
+        else {
+            left = pivot - snippetWidth / 4;
+            right = pivot + snippetWidth - snippetWidth / 4;
+        }
+        
+        snippet = content[left .. right];
+
+        return snippet;
+    }
+
+    // Calcula los puntos en la vecindad de la palabra
+    // La vecindad ira desde (point - snippetWidth/4 ; point + snippetWidth - snippetWidth/4)
+    static int GetZone(int point, SortedSet<int> positions, Dictionary<int, string> words, int docSize) {
+
+        int left, right; // Los limites de la vecindad
+
+        // Calculando los limites
+        if (point - snippetWidth / 4 < 0) { // Si el punto esta muy al comienzo del doc
+            left = 0;
+            right = snippetWidth;
+        }
+        else if (point + snippetWidth - snippetWidth / 4 >= docSize) { // Si esta muy al final
+            right = docSize - 1;
+            left = docSize - snippetWidth;
+        }
+        else {
+            left = point - snippetWidth / 4;
+            right = point + snippetWidth - snippetWidth / 4;
+        }
+
+        // Obteniendo los puntos existentes en el rango
+        var rangeSet = positions.GetViewBetween(left, right);
+        int result = rangeSet.Count;
+
+        return result;
     }
 }
