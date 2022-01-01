@@ -21,11 +21,6 @@ public class Location { // Almacena todos los datos de cada palabra
         }
     }
 
-    public void Sort() {
-        // Array.Sort(this.occurrences, new TFIDFComparer());
-        this.occurrences = this.occurrences.OrderByDescending(x => x.Relevance).ToArray();
-    }
-
     public void RemoveNull() {
         List<Occurrences> list = new List<Occurrences> ();
 

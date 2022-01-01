@@ -28,7 +28,7 @@ public static class SearchEngine {
         }
         else {
             Location info = data.Words[word];
-            for (int i = 0; i < data.Docs.Count && i < info.Size; i++) { // Los docs estan ordenados por TF-IDF
+            for (int i = 0; i < info.Size; i++) { // Los docs estan ordenados por TF-IDF
 
                 items.Add(new PartialItem(word, i, multiplier, original));
             }

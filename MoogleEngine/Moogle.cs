@@ -25,10 +25,6 @@ public static class Moogle
             }
         }
 
-        foreach (var word in data.Words) { // Ordenando las palabras por su TF-IDF
-            word.Value.Sort();
-        }
-
         System.Console.WriteLine("✅ TF-IDF's calculados");
     }
 
