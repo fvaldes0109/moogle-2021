@@ -90,7 +90,7 @@ public static class SearchEngine {
                 // Si es una palabra poco relevante se ignora
                 // Como el documento paso el if anterior esta garantizado que contiene
                 // al menos una palabra relevante
-                if (occurrences.Relevance < minScore) continue;
+                if (occurrences.Relevance < minScore && hasRelevant) continue;
 
                 // Si la palabra se obtuvo de una sugerencia
                 if (partial.Original != "") {
@@ -118,7 +118,7 @@ public static class SearchEngine {
 
     // Devuelve una lista ordenada
     public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, int amount) {
-
+        
         // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
         Dictionary<int, CumulativeScore> relevances = new Dictionary<int, CumulativeScore> ();
 
@@ -138,8 +138,8 @@ public static class SearchEngine {
 
         List<CumulativeScore> results = new List<CumulativeScore>();
 
-        foreach (var docContent in sortedRelevances) {
-            results.Add(docContent.Value);
+        for (int i = 0; i < sortedRelevances.Count && i < amount; i++) {
+            results.Add(sortedRelevances[i].Value);
         }
 
         return results;
