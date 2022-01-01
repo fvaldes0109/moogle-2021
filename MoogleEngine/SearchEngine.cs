@@ -51,13 +51,12 @@ public static class SearchEngine {
     }
 
     // Genera la lista de resultados finales
-    public static SearchResult GetResults(IndexData data, List<CumulativeScore> docsData) {
+    public static SearchResult GetResults(IndexData data, List<CumulativeScore> docsData, string[] originalWords) {
 
         // Aqui va la lista de resultados
         List<SearchItem> items = new List<SearchItem>();
         // Aqui van las palabras encontradas en los documentos. Se usara para las sugerencias
-        HashSet<string> existingWords = new HashSet<string>();
-        string suggestions = "";
+        HashSet<PartialItem> suggestedWords = new HashSet<PartialItem>();
 
         bool hasRelevant = false; // Indicador de si en los resultados hay docs de alta relevancia
         // Procesando cada documento a mostrar
@@ -93,7 +92,10 @@ public static class SearchEngine {
                 // al menos una palabra relevante
                 if (occurrences.Relevance < minScore) continue;
 
-                existingWords.Add(partial.Word);
+                // Si la palabra se obtuvo de una sugerencia
+                if (partial.Original != "") {
+                    suggestedWords.Add(partial);
+                }
                 
                 // Guardando las ocurrencias de la palabra en el doc
                 foreach (var pos in occurrences.StartPos) {
@@ -108,6 +110,9 @@ public static class SearchEngine {
             // Creando el SearchItem correspondiente a este doc
             items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore));
         }
+        
+        string suggestions = GenerateSuggestionString(originalWords, suggestedWords.ToArray());
+
         return new SearchResult(items.ToArray(), suggestions);
     }
 
@@ -276,5 +281,23 @@ public static class SearchEngine {
         int result = rangeSet.Count;
 
         return result;
+    }
+
+    // Dada la cadena original y los parciales de las sugerencias, genera el string de sugerencias
+    static string GenerateSuggestionString(string[] originalWords, PartialItem[] partials) {
+
+        bool changed = false; // Para saber si el string original sera modificado
+        foreach (var partial in partials) {
+            
+            int pos = ArrayOperation.Find(originalWords, partial.Original);
+            if (pos != -1) {
+                changed = true;
+                originalWords[pos] = partial.Word;
+            }
+        }
+        if (changed) {
+            return ArrayOperation.String(originalWords);
+        }
+        else return "@null";
     }
 }

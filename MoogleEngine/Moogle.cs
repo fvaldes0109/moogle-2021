@@ -50,7 +50,7 @@ public static class Moogle
             }
             List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials.ToArray(), finalResults);
 
-            result = SearchEngine.GetResults(data, partialResults);
+            result = SearchEngine.GetResults(data, partialResults, words);
             // Generando el string de sugerencias para mostrar
             // suggestions = GenerateSuggestionString(words, partialResults);
         }
@@ -59,24 +59,5 @@ public static class Moogle
         // }
 
         return result;
-    }
-
-    static string GenerateSuggestionString(string[] words, PartialItem[] partials) {
-
-        bool changed = false; // Para saber si el string original sera modificado
-        foreach (var partial in partials) {
-            if (partial.Original != "") { 
-                
-                int pos = ArrayOperation.Find(words, partial.Original);
-                if (pos != -1) {
-                    changed = true;
-                    words[pos] = partial.Word;
-                }
-            }
-        }
-        if (changed) {
-            return ArrayOperation.String(words);
-        }
-        else return "@null";
     }
 }
