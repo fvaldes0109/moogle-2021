@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace MoogleEngine;
 
@@ -7,22 +6,37 @@ public static class StringParser { // Clase para el manejo y formateo de strings
 
     public static char IsAlphaNum(char car) { // Revisa si es un caracter alfanumerico valido
         string c = car.ToString().ToLower();
-        if (Regex.IsMatch(c, "[a-z0-9áéíóúüçñ]")) {
+        if (char.IsLetterOrDigit(c[0])) {
+            // Si es una vocal con tilde, dierisis, etc, convertirla a la vocal plana
             switch (c) {
                 case "á":
+                case "ä":
+                case "à":
+                case "â":
                     c = "a";
                     break;
                 case "é":
+                case "ë":
+                case "è":
+                case "ê":
                     c = "e";
                     break;
                 case "í":
+                case "ï":
+                case "ì":
+                case "î":
                     c = "i";
                     break;
                 case "ó":
+                case "ö":
+                case "ò":
+                case "ô":
                     c = "o";
                     break;
                 case "ú":
                 case "ü":
+                case "ù":
+                case "û":
                     c = "u";
                     break;
             }
