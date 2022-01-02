@@ -16,4 +16,9 @@ public class PartialItem { // Representa los datos minimos de un resultado
     public float Multiplier { get; private set; } // Multiplicador de relevancia
 
     public string Original { get; private set; } // Palabra original buscada
+
+    // Incrementa el multiplicador de la palabra
+    public void Multiply(float value) {
+        this.Multiplier *= value;
+    }
 }

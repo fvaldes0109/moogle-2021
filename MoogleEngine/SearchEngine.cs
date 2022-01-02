@@ -151,6 +151,7 @@ public static class SearchEngine {
 
         string[] mandatoryWords = parsedInput.MandatoryWords; // Las palabras con operador ^
         string[] forbiddenWords = parsedInput.ForbiddenWords; // Las palabras con operador !
+        Tuple<string, int>[] multipliedWords = parsedInput.MultipliedWords; // Las palabras con operador *
 
         List<PartialItem> result = new List<PartialItem>();
 
@@ -180,6 +181,16 @@ public static class SearchEngine {
                     break;
                 }
             }
+
+            // Aplicando los multiplicadores del operador *
+            foreach (var pair in multipliedWords) {
+                
+                // Si estamos analizando la misma palabra
+                if (pair.Item1 == partial.Word) {
+                    partial.Multiply((float)(Math.Pow(pair.Item2 + 1, pair.Item2 + 1)));
+                }
+            }
+
             if (flag) { // Si no es false, todas las palabras requeridas estan. Lo usaremos
                 result.Add(partial);
             }

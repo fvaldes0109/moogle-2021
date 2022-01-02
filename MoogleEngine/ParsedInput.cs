@@ -47,6 +47,22 @@ public class ParsedInput {
         }
     }
 
+    // Devuelve un arreglo con las palabras que tengan operador * y su cantidad
+    public Tuple<string, int>[] MultipliedWords {
+        get {
+            List<Tuple<string, int>> result = new List<Tuple<string, int>>();
+
+            for (int i = 0; i < this.Words.Count; i++) {
+
+                int mult = this.Operators[i].Count(x => x == '*');
+                if (mult > 0) {
+                    result.Add(new Tuple<string, int>(this.Words[i], mult));
+                }
+            }
+            return result.ToArray();
+        }
+    }
+
     // Inserta el nuevo operador en la posicion correspondiente
     public void PushOperator(char c) {
         // Si el tamaño es <= entonces este es el 1er operador asociado a esta palabra
