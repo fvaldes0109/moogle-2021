@@ -115,14 +115,16 @@ public static class SearchEngine {
         return new SearchResult(items.ToArray(), suggestions);
     }
 
-    // Devuelve una lista ordenada
-    public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, int amount) {
+    // Devuelve una lista ordenada con documentos a mostrar
+    public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, ParsedInput parsedInput, int amount) {
+
+        List<PartialItem> filtered = FilterByOperators(data, partials, parsedInput);
 
         // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
         Dictionary<int, CumulativeScore> relevances = new Dictionary<int, CumulativeScore> ();
 
         // Iterando por los resultados parciales analizados
-        foreach (var partial in partials) {
+        foreach (var partial in filtered) {
             
             Dictionary<int, Occurrences> info = data.Words[partial.Word];
             // Si no se ha analizado el documento, se creara su clave
@@ -142,6 +144,36 @@ public static class SearchEngine {
         }
 
         return results;
+    }
+
+    // Recibe una lista de parciales y los filtra segun los operadores dados por el usuario
+    static List<PartialItem> FilterByOperators(IndexData data, List<PartialItem> partials, ParsedInput parsedInput) {
+
+        string[] mandatoryWords = parsedInput.MandatoryWords; // Las palabras con operador ^
+
+        List<PartialItem> result = new List<PartialItem>();
+
+        // Recorriendo y validando cada documento
+        foreach (var partial in partials) {
+
+            int Id = partial.Document;
+
+            // Seleccionando solo los documentos que contengan todas las palabras obligatorias
+            bool flag = true; // Bandera para detectar si el documento contiene todas las palabras
+            foreach (string word in mandatoryWords) {
+                
+                // Si el documento no contiene la palabra, ya no lo queremos
+                if (!(data.Words.ContainsKey(word)) || !(data.Words[word].ContainsKey(Id))) {
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag) { // Si no es false, todas las palabras requeridas estan. Lo usaremos
+                result.Add(partial);
+            }
+        }
+
+        return result;
     }
 
     // Genera la mejor sugerencia para una palabra. Devuelve la palabra y el multiplicador

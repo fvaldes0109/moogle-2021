@@ -38,7 +38,7 @@ public static class Moogle
             foreach (var word in words) {
                 partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, minForSuggestion, sameRoot: true)));
             }
-            List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials, finalResults);
+            List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials, parsedInput, finalResults);
 
             result = SearchEngine.GetResults(data, partialResults, words);
         }

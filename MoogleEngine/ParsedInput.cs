@@ -17,13 +17,28 @@ public class ParsedInput {
     // Si la i-esima posicion es true, significa que entre la i-esima palabra y la i+1 hay un ~
     public List<bool> Tildes { get; private set; }
 
+    // Devuelve un arreglo con las palabras que tengan operador ^
+    public string[] MandatoryWords {
+        get {
+            List<string> result = new List<string>();
+
+            for (int i = 0; i < this.Words.Count; i++) {
+
+                if (this.Operators[i].Contains("^")) {
+                    result.Add(this.Words[i]);
+                }
+            }
+            return result.ToArray();
+        }
+    }
+
     // Inserta el nuevo operador en la posicion correspondiente
     public void PushOperator(char c) {
         // Si el tamaño es <= entonces este es el 1er operador asociado a esta palabra
         if (this.Operators.Count <= this.Words.Count) {
 
             // Rellenando los espacios de las palabras que no tenian operadores
-            for (int i = 0; i < this.Words.Count - this.Operators.Count; i++) {
+            while (this.Words.Count - this.Operators.Count > 0) {
                 this.Operators.Add("");
             }
             // Agregando el operador a la posicion correspondiente a la palabra
