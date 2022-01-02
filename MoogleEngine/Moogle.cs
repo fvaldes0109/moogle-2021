@@ -10,12 +10,18 @@ public static class Moogle
     static IndexData data;
 
     public static void Init() {
+
+        // Leyendo y guardando todas las palabras
         data = new IndexData();
+
+        // Calculando los TF-IDF
         foreach (var pair in data.Words) {
             
             foreach (var doc in pair.Value) {
+
+                float tf = (float)Math.Log2((float)doc.Value.StartPos.Count + 1);
                 float idf = (float)Math.Log2((float)(data.Docs.Count) / (float)pair.Value.Count);
-                doc.Value.Relevance = doc.Value.StartPos.Count * idf;
+                doc.Value.Relevance = tf * idf;
             }
         }
 
