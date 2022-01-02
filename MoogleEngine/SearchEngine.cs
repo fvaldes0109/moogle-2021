@@ -27,10 +27,9 @@ public static class SearchEngine {
             }
         }
         else {
-            Location info = data.Words[word];
-            for (int i = 0; i < info.Size; i++) { // Los docs estan ordenados por TF-IDF
-
-                items.Add(new PartialItem(word, i, multiplier, original));
+            Dictionary<int, Occurrences> info = data.Words[word];
+            foreach (var doc in info) {
+                items.Add(new PartialItem(word, doc.Key, multiplier, original));
             }
             // Si hay muy pocos resultados, generar sugerencias
             if (items.Count < minAcceptable) {
@@ -63,7 +62,7 @@ public static class SearchEngine {
         for (int i = 0; i < docsData.Count; i++) {
             
             // Obteniendo datos del documento
-            int docID = data.Words[docsData[i].Content[0].Word][docsData[i].Content[0].Document].Id;
+            int docID = docsData[i].Content[0].Document;
 
             // Obteniendo el nombre del doc
             string docPath = data.Docs[docID];
@@ -118,19 +117,19 @@ public static class SearchEngine {
 
     // Devuelve una lista ordenada
     public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, int amount) {
-        
+
         // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
         Dictionary<int, CumulativeScore> relevances = new Dictionary<int, CumulativeScore> ();
 
         // Iterando por los resultados parciales analizados
         foreach (var partial in partials) {
             
-            Location info = data.Words[partial.Word];
+            Dictionary<int, Occurrences> info = data.Words[partial.Word];
             // Si no se ha analizado el documento, se creara su clave
-            if (!(relevances.ContainsKey(info[partial.Document].Id))) {
-                relevances.Add(info[partial.Document].Id, new CumulativeScore());
+            if (!(relevances.ContainsKey(partial.Document))) {
+                relevances.Add(partial.Document, new CumulativeScore());
             }
-            relevances[info[partial.Document].Id].AddWord(info[partial.Document].Relevance, partial);
+            relevances[partial.Document].AddWord(info[partial.Document].Relevance, partial);
         }
 
         // Ordena los documentos por su relevancia total

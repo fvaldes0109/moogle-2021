@@ -13,15 +13,9 @@ public static class Moogle
         data = new IndexData();
         foreach (var pair in data.Words) {
             
-            string word = pair.Key;
-            Location location = pair.Value;
-            location.RemoveNull();
-
-            for (int i = 0; i < location.Size; i++) {
-                if (location[i] != null) {
-                    float idf = (float)Math.Log2((float)(data.Docs.Count) / (float)location.Size);
-                    location[i].Relevance = location[i].StartPos.Count * idf;
-                }
+            foreach (var doc in pair.Value) {
+                float idf = (float)Math.Log2((float)(data.Docs.Count) / (float)pair.Value.Count);
+                doc.Value.Relevance = doc.Value.StartPos.Count * idf;
             }
         }
 

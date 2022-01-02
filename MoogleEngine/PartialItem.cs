@@ -11,7 +11,7 @@ public class PartialItem { // Representa los datos minimos de un resultado
 
     public string Word { get; private set; }
 
-    public int Document { get; private set; } // Es el indice del doc en la palabra, no el Id
+    public int Document { get; private set; } // Es el ID del documento
 
     public float Multiplier { get; private set; } // Multiplicador de relevancia
 

@@ -5,7 +5,7 @@ namespace MoogleEngine;
 
 public class IndexData {
 
-    Dictionary<string, Location> words = new Dictionary<string, Location>(); // Toda la info sobre cada palabra que aparece
+    Dictionary<string, Dictionary<int, Occurrences>> words = new Dictionary<string, Dictionary<int, Occurrences>>(); // Toda la info sobre cada palabra que aparece
     Dictionary<int, string> docs = new Dictionary<int, string>(); // Asignar un ID unico a cada documento
 
     // Cada palabra recortada apunta a su palabra original
@@ -31,12 +31,12 @@ public class IndexData {
             foreach (var word in wordList) {
                 
                 if (!words.ContainsKey(word.Item1)) { // Inicializar el array de docs de cada palabra
-                    words.Add(word.Item1, new Location(files.Length));
+                    words.Add(word.Item1, new Dictionary<int, Occurrences>());
                     GetSubwords(word.Item1);
                     GetLexems(word.Item1);
                 }
-                if (words[word.Item1][i] == null) { // Inicializar las ocurrencias en un doc especifico
-                    words[word.Item1][i] = new Occurrences(i);
+                if (!(words[word.Item1].ContainsKey(i))) { // Inicializar las ocurrencias en un doc especifico
+                    words[word.Item1][i] = new Occurrences();
                 }
                 words[word.Item1][i].Push(word.Item2); // Agrega una nueva ocurrencia de la palabra en el doc
             }
@@ -46,7 +46,7 @@ public class IndexData {
         System.Console.WriteLine("✅ Indexado en {0}ms", crono.ElapsedMilliseconds);
     }
 
-    public Dictionary<string, Location> Words { get { return words; } }
+    public Dictionary<string, Dictionary<int, Occurrences>> Words { get { return words; } }
 
     public Dictionary<int, string> Docs { get { return docs; } }
 
