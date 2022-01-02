@@ -32,6 +32,21 @@ public class ParsedInput {
         }
     }
 
+    // Devuelve un arreglo con las palabras que tengan operador !
+    public string[] ForbiddenWords {
+        get {
+            List<string> result = new List<string>();
+
+            for (int i = 0; i < this.Words.Count; i++) {
+
+                if (this.Operators[i].Contains("!")) {
+                    result.Add(this.Words[i]);
+                }
+            }
+            return result.ToArray();
+        }
+    }
+
     // Inserta el nuevo operador en la posicion correspondiente
     public void PushOperator(char c) {
         // Si el tamaño es <= entonces este es el 1er operador asociado a esta palabra

@@ -150,6 +150,7 @@ public static class SearchEngine {
     static List<PartialItem> FilterByOperators(IndexData data, List<PartialItem> partials, ParsedInput parsedInput) {
 
         string[] mandatoryWords = parsedInput.MandatoryWords; // Las palabras con operador ^
+        string[] forbiddenWords = parsedInput.ForbiddenWords; // Las palabras con operador !
 
         List<PartialItem> result = new List<PartialItem>();
 
@@ -158,12 +159,23 @@ public static class SearchEngine {
 
             int Id = partial.Document;
 
+            bool flag = true; // Bandera para detectar si el documento pasa todos los filtros
+
             // Seleccionando solo los documentos que contengan todas las palabras obligatorias
-            bool flag = true; // Bandera para detectar si el documento contiene todas las palabras
             foreach (string word in mandatoryWords) {
                 
                 // Si el documento no contiene la palabra, ya no lo queremos
                 if (!(data.Words.ContainsKey(word)) || !(data.Words[word].ContainsKey(Id))) {
+                    flag = false;
+                    break;
+                }
+            }
+
+            // Seleccionando solo los documentos que no contengan palabras excluidas
+            foreach (string word in forbiddenWords) {
+
+                // Si el documento contiene la palabra, ya no lo queremos
+                if (data.Words.ContainsKey(word) && data.Words[word].ContainsKey(Id)) {
                     flag = false;
                     break;
                 }
