@@ -30,15 +30,20 @@ public class IndexData {
             
             foreach (var word in wordList) {
                 
-                if (!words.ContainsKey(word.Item1)) { // Inicializar el array de docs de cada palabra
-                    words.Add(word.Item1, new Dictionary<int, Occurrences>());
-                    GetSubwords(word.Item1);
-                    GetLexems(word.Item1);
+                // Poner aqui la generacion de la raiz
+
+                // La palabra sin acentos
+                string parsedWord = StringParser.ParseAccents(word.Item1);
+
+                if (!words.ContainsKey(parsedWord)) { // Inicializar el array de docs de cada palabra
+                    words.Add(parsedWord, new Dictionary<int, Occurrences>());
+                    GetSubwords(parsedWord);
+                    GetLexems(parsedWord);
                 }
-                if (!(words[word.Item1].ContainsKey(i))) { // Inicializar las ocurrencias en un doc especifico
-                    words[word.Item1][i] = new Occurrences();
+                if (!(words[parsedWord].ContainsKey(i))) { // Inicializar las ocurrencias en un doc especifico
+                    words[parsedWord][i] = new Occurrences();
                 }
-                words[word.Item1][i].Push(word.Item2); // Agrega una nueva ocurrencia de la palabra en el doc
+                words[parsedWord][i].Push(word.Item2); // Agrega una nueva ocurrencia de la palabra en el doc
             }
         }
 
