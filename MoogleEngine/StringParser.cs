@@ -76,7 +76,7 @@ public static class StringParser { // Clase para el manejo y formateo de strings
             }
             else {
                 if (word.Length > 0) { // Si no, termina la palabra y la agrega a la lista
-                    result.Words.Add(word.ToString());
+                    result.Words.Add(ParseAccents(word.ToString()));
                     word.Clear();
                 }
             }
