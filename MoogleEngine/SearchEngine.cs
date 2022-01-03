@@ -77,9 +77,11 @@ public static class SearchEngine {
             }
             
             // Asocia a cada posicion del doc (que tenga una palabra buscada) su respectiva palabra
-            Dictionary<int, string> words = new Dictionary<int, string>();
+            // Dictionary<int, string> words = new Dictionary<int, string>();
             // Guarda todas las posiciones ocupadas. SortedSet para buscar rangos mas facilmente
-            SortedSet<int> positions = new SortedSet<int>();
+            // SortedSet<int> positions = new SortedSet<int>();
+
+            WordPositions positionsStore = new WordPositions();
 
             // Revisando entre todas las palabras que aparecen en el documento
             foreach (var partial in docsData[i].Content) {
@@ -97,14 +99,9 @@ public static class SearchEngine {
                 }
                 
                 // Guardando las ocurrencias de la palabra en el doc
-                foreach (var pos in occurrences.StartPos) {
-                    if (!positions.Contains(pos)) {
-                        words.Add(pos, partial.Word);
-                        positions.Add(pos);
-                    }
-                }
+                positionsStore.Insert(partial.Word, occurrences.StartPos.ToArray());
             }
-            string snippet = GetSnippet(docPath, words, positions);
+            string snippet = GetSnippet(docPath, positionsStore);
 
             // Creando el SearchItem correspondiente a este doc
             items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore));
@@ -266,20 +263,20 @@ public static class SearchEngine {
     }
 
     // Dado un conjunto de posiciones y sus palabras, obtiene el snippet con mas palabras
-    static string GetSnippet(string docPath, Dictionary<int, string> words, SortedSet<int> positions) {
+    static string GetSnippet(string docPath, WordPositions positionsStore) {
 
         StreamReader reader = new StreamReader(docPath);
         string content = reader.ReadToEnd();
         reader.Close();
         
         int maxPoints = 1; // El maximo de palabras en una vecindad
-        int pivot = positions.ElementAt(0); // El pivote de la vecindad
+        int pivot = positionsStore.Positions.ElementAt(0); // El pivote de la vecindad
 
         // Recorriendo todas las posiciones con palabras
-        foreach (int pos in positions) {
+        foreach (int pos in positionsStore.Positions) {
 
             // Calculando la cantidad de puntos en la vecindad
-            int points = GetZone(pos, positions, words, content.Length);
+            int points = GetZone(pos, positionsStore, content.Length);
 
             if (maxPoints < points) {
                 maxPoints = points;
@@ -312,7 +309,7 @@ public static class SearchEngine {
 
     // Calcula los puntos en la vecindad de la palabra
     // La vecindad ira desde (point - snippetWidth/4 ; point + snippetWidth - snippetWidth/4)
-    static int GetZone(int point, SortedSet<int> positions, Dictionary<int, string> words, int docSize) {
+    static int GetZone(int point, WordPositions positionsStore, int docSize) {
 
         int left, right; // Los limites de la vecindad
 
@@ -331,7 +328,7 @@ public static class SearchEngine {
         }
 
         // Obteniendo los puntos existentes en el rango
-        var rangeSet = positions.GetViewBetween(left, right);
+        var rangeSet = positionsStore.Positions.GetViewBetween(left, right);
         int result = rangeSet.Count;
 
         return result;
