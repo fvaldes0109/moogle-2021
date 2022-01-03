@@ -19,8 +19,10 @@ public class WordPositions {
 
         foreach (int pos in posArray) {
             
-            this.Positions.Add(pos);
-            this.Words.Add(pos, word);
+            if (!(this.Positions.Contains(pos))) {
+                this.Positions.Add(pos);
+                this.Words.Add(pos, word);
+            }
         }
     }
 }
