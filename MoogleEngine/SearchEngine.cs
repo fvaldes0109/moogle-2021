@@ -75,12 +75,7 @@ public static class SearchEngine {
             else if (docScore > minScore) {
                 hasRelevant = true;
             }
-            
-            // Asocia a cada posicion del doc (que tenga una palabra buscada) su respectiva palabra
-            // Dictionary<int, string> words = new Dictionary<int, string>();
-            // Guarda todas las posiciones ocupadas. SortedSet para buscar rangos mas facilmente
-            // SortedSet<int> positions = new SortedSet<int>();
-
+            // Almacena todas las posiciones que tengan palabras buscadas para generar el snippet
             WordPositions positionsStore = new WordPositions();
 
             // Revisando entre todas las palabras que aparecen en el documento
@@ -101,7 +96,7 @@ public static class SearchEngine {
                 // Guardando las ocurrencias de la palabra en el doc
                 positionsStore.Insert(partial.Word, occurrences.StartPos.ToArray());
             }
-            string snippet = GetSnippet(docPath, positionsStore);
+            string snippet = GetSnippet(docPath, positionsStore, hasRelevant);
 
             // Creando el SearchItem correspondiente a este doc
             items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore));
@@ -263,7 +258,7 @@ public static class SearchEngine {
     }
 
     // Dado un conjunto de posiciones y sus palabras, obtiene el snippet con mas palabras
-    static string GetSnippet(string docPath, WordPositions positionsStore) {
+    static string GetSnippet(string docPath, WordPositions positionsStore, bool hasRelevant) {
 
         StreamReader reader = new StreamReader(docPath);
         string content = reader.ReadToEnd();
@@ -272,17 +267,22 @@ public static class SearchEngine {
         int maxPoints = 1; // El maximo de palabras en una vecindad
         int pivot = positionsStore.Positions.ElementAt(0); // El pivote de la vecindad
 
-        // Recorriendo todas las posiciones con palabras
-        foreach (int pos in positionsStore.Positions) {
+        // Si tiene palabras relevantes, selecciona el mejor snippet
+        // Si son solo palabras mongas, escoge el 1ro. Pues si no se demoraria demasiado
+        if (hasRelevant) {
+            // Recorriendo todas las posiciones con palabras
+            foreach (int pos in positionsStore.Positions) {
 
-            // Calculando la cantidad de puntos en la vecindad
-            int points = GetZone(pos, positionsStore, content.Length);
+                // Calculando la cantidad de puntos en la vecindad
+                int points = GetZone(pos, positionsStore);
 
-            if (maxPoints < points) {
-                maxPoints = points;
-                pivot = pos;
+                if (maxPoints < points) {
+                    maxPoints = points;
+                    pivot = pos;
+                }
             }
         }
+
 
         string snippet = "";
 
@@ -309,8 +309,9 @@ public static class SearchEngine {
 
     // Calcula los puntos en la vecindad de la palabra
     // La vecindad ira desde (point - snippetWidth/4 ; point + snippetWidth - snippetWidth/4)
-    static int GetZone(int point, WordPositions positionsStore, int docSize) {
+    static int GetZone(int point, WordPositions positionsStore) {
 
+        int docSize = positionsStore.Positions.Last();
         int left, right; // Los limites de la vecindad
 
         // Calculando los limites
