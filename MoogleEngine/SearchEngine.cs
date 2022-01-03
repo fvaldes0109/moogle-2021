@@ -201,14 +201,19 @@ public static class SearchEngine {
                         }
                     }
 
-                    // Analizando cada posicion
-                    foreach (int pos in wordPositions.Positions) {
-
-                        // Analizando cada diametro de esa posicion
-                        for (int i = 0; i < closerDiameter.Length; i++) {
+                    bool achievedBest = false;
+                    // Analizando cada diametro
+                    for (int i = 0; i < closerDiameter.Length && !achievedBest; i++) {
+                        // Analizando cada posicion con ese diametro
+                        foreach (int pos in wordPositions.Positions) {
                             // Calculando los multiplicadores y guardando el maximo
                             int amount = GetZone(pos, wordPositions, closerDiameter[i]);
                             maxMult = Math.Max(maxMult, (amount - 1) * (closerDiameter.Length - i + 1));
+                            // Si se hallo un intervalo con todas las palabras, no existe uno mejor
+                            if (amount == wordSet.Count) {
+                                achievedBest = true;
+                                break;
+                            }
                         }
                     }
                 }
