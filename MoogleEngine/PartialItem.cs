@@ -21,4 +21,8 @@ public class PartialItem { // Representa los datos minimos de un resultado
     public void Multiply(float value) {
         this.Multiplier *= value;
     }
+
+    public void Multiply(int value) {
+        this.Multiplier *= value;
+    }
 }

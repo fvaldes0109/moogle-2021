@@ -10,6 +10,9 @@ public static class SearchEngine {
     // La cantidad de caracteres que tendra el snippet
     static int snippetWidth = 150; 
 
+    // Las longitudes de los rangos para el operador ~
+    static int[] closerDiameter = new int[] { 20, 50, 100, 150 };
+
     // Busca los docs mas relevantes que contengan la palabra
     // MinAcceptable indica la cantidad minima de resultados para no generar sugerencias
     public static PartialItem[] GetOneWord(IndexData data, string word, int minAcceptable, float multiplier = 1.0f, string original = "", bool sameRoot = false) { 
@@ -144,6 +147,7 @@ public static class SearchEngine {
         string[] mandatoryWords = parsedInput.MandatoryWords; // Las palabras con operador ^
         string[] forbiddenWords = parsedInput.ForbiddenWords; // Las palabras con operador !
         Tuple<string, int>[] multipliedWords = parsedInput.MultipliedWords; // Las palabras con operador *
+        List<string>[] closerWords = parsedInput.CloserWords; // Las palabras entre operadores ~
 
         List<PartialItem> result = new List<PartialItem>();
 
@@ -173,17 +177,43 @@ public static class SearchEngine {
                     break;
                 }
             }
-
-            // Aplicando los multiplicadores del operador *
-            foreach (var pair in multipliedWords) {
-                
-                // Si estamos analizando la misma palabra
-                if (pair.Item1 == partial.Word) {
-                    partial.Multiply((float)(Math.Pow(pair.Item2 + 1, pair.Item2 + 1)));
-                }
-            }
-
+            
             if (flag) { // Si no es false, todas las palabras requeridas estan. Lo usaremos
+
+                // Aplicando los multiplicadores del operador *
+                foreach (var pair in multipliedWords) {
+
+                    // Si estamos analizando la misma palabra
+                    if (pair.Item1 == partial.Word) {
+                        partial.Multiply((float)(Math.Pow(pair.Item2 + 1, pair.Item2 + 1)));
+                    }
+                }
+
+                // Aplicando los operadores ~
+                int maxMult = 1; // Multiplicador que se aplicara al documento
+                foreach (var wordSet in closerWords) { // Analizando cada grupo de palabras
+                    // Para almacenar las posiciones de este grupo de palabras
+                    WordPositions wordPositions = new WordPositions(); 
+                    foreach (string word in wordSet) {
+
+                        if (data.Words.ContainsKey(word) && data.Words[word].ContainsKey(Id)) {
+                            wordPositions.Insert(word, data.Words[word][Id].StartPos.ToArray());
+                        }
+                    }
+
+                    // Analizando cada posicion
+                    foreach (int pos in wordPositions.Positions) {
+
+                        // Analizando cada diametro de esa posicion
+                        for (int i = 0; i < closerDiameter.Length; i++) {
+                            // Calculando los multiplicadores y guardando el maximo
+                            int amount = GetZone(pos, wordPositions, closerDiameter[i]);
+                            maxMult = Math.Max(maxMult, (amount - 1) * (closerDiameter.Length - i + 1));
+                        }
+                    }
+                }
+                partial.Multiply(maxMult);
+
                 result.Add(partial);
             }
         }
@@ -274,7 +304,7 @@ public static class SearchEngine {
             foreach (int pos in positionsStore.Positions) {
 
                 // Calculando la cantidad de puntos en la vecindad
-                int points = GetZone(pos, positionsStore);
+                int points = GetZone(pos, positionsStore, snippetWidth);
 
                 if (maxPoints < points) {
                     maxPoints = points;
@@ -308,31 +338,40 @@ public static class SearchEngine {
     }
 
     // Calcula los puntos en la vecindad de la palabra
-    // La vecindad ira desde (point - snippetWidth/4 ; point + snippetWidth - snippetWidth/4)
-    static int GetZone(int point, WordPositions positionsStore) {
+    // La vecindad ira desde (point - width/4 ; point + width - width/4)
+    static int GetZone(int point, WordPositions positionsStore, int width) {
+        
+        if (positionsStore.Positions.Count == 0) return 1;
 
         int docSize = positionsStore.Positions.Last();
         int left, right; // Los limites de la vecindad
 
         // Calculando los limites
-        if (point - snippetWidth / 4 < 0) { // Si el punto esta muy al comienzo del doc
+        if (point - width / 4 < 0) { // Si el punto esta muy al comienzo del doc
             left = 0;
-            right = snippetWidth;
+            right = width;
         }
-        else if (point + snippetWidth - snippetWidth / 4 >= docSize) { // Si esta muy al final
+        else if (point + width - width / 4 >= docSize) { // Si esta muy al final
             right = docSize - 1;
-            left = docSize - snippetWidth;
+            left = docSize - width;
         }
         else {
-            left = point - snippetWidth / 4;
-            right = point + snippetWidth - snippetWidth / 4;
+            left = point - width / 4;
+            right = point + width - width / 4;
         }
 
         // Obteniendo los puntos existentes en el rango
-        var rangeSet = positionsStore.Positions.GetViewBetween(left, right);
-        int result = rangeSet.Count;
+        SortedSet<int> rangeSet = positionsStore.Positions.GetViewBetween(left, right);
+        
+        // Hallando cuantas palabras diferentes existen en el rango
+        HashSet<string> diffWords = new HashSet<string>();
+        foreach (int pos in rangeSet) {
+            if (!(diffWords.Contains(positionsStore.Words[pos]))) {
+                diffWords.Add(positionsStore.Words[pos]);
+            }
+        }
 
-        return result;
+        return diffWords.Count;
     }
 
     // Dada la cadena original y los parciales de las sugerencias, genera el string de sugerencias

@@ -63,6 +63,32 @@ public class ParsedInput {
         }
     }
 
+    // Obtener los grupos de palabras que deben estar cerca
+    public List<string>[] CloserWords {
+        get {
+            List<List<string>> result = new List<List<string>>();
+
+            bool inSequence = false;
+            for (int i = 0; i < this.Words.Count; i++) {
+
+                if (this.Tildes[i]) {
+                    if (!inSequence) {
+                        result.Add(new List<string>());
+                        inSequence = true;
+                    }
+                    result[result.Count - 1].Add(this.Words[i]);
+                }
+                else {
+                    if (inSequence) {
+                        result[result.Count - 1].Add(this.Words[i]);
+                    }
+                    inSequence = false;
+                }
+            }
+            return result.ToArray();
+        }
+    }
+
     // Inserta el nuevo operador en la posicion correspondiente
     public void PushOperator(char c) {
         // Si el tamaño es <= entonces este es el 1er operador asociado a esta palabra
@@ -88,7 +114,7 @@ public class ParsedInput {
         if (this.Words.Count == 0 || this.Words.Count == this.Tildes.Count) return;
 
         // Rellenando los espacios de las palabras que no tenian operadores
-        for (int i = this.Tildes.Count; i < this.Words.Count - this.Tildes.Count - 1; i++) {
+        while (this.Words.Count - this.Tildes.Count > 1) {
             this.Tildes.Add(false);
         }
         // Agregando true en la posicion recibida
