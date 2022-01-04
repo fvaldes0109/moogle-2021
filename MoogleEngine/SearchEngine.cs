@@ -272,6 +272,9 @@ public static class SearchEngine {
         string root = Stemming.GetRoot(word);
         List<PartialItem> results = new List<PartialItem>();
 
+        // Evitar usar la propia palabra como raiz. Probablemente se trate de un falso positivo
+        if (root == word) return results;
+
         // Revisando si el lexema existe
         if (data.Roots.ContainsKey(root)) {
             // Iterando por cada posible origen
@@ -280,7 +283,7 @@ public static class SearchEngine {
                     // Distancia entre la nueva palabra y la original
                     float priority = 1.0f - (float)SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
                     // Buscando la nueva palabra en cada documento
-                    List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, 0, priority * 0.001f));
+                    List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, 0, priority * 0.1f));
                     results.AddRange(newResults);
                 }
             }
