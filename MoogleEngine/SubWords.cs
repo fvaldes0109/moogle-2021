@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace MoogleEngine;
 
 // Clase para la generacion de palabras derivadas para procesar sugerencias
@@ -11,9 +9,6 @@ public static class SubWords {
 
     // La cantidad maxima de fallos que el usuario puede cometer en una palabra
     static int maxErrors = 4;
-
-    // El limite de caracteres de una palabra que se pueden descartar para hallar lexemas
-    static int suffixLimit = 6;
 
     static List<string> adding = new List<string>(); // Para llevar la cuenta de las subpalabras generadas
 
@@ -28,23 +23,6 @@ public static class SubWords {
         PushDerivates(word);
 
         return adding;
-    }
-
-    // Metodo para generar los lexemas de una palabra
-    public static List<string> GetPrefixes(string word) {
-        
-        int wordLimit = word.Length - 4; // El limite de caracteres a procesar segun la palabra
-
-        List<string> result = new List<string>();
-        StringBuilder temp = new StringBuilder(word);
-
-        // Iterando por cada caracter
-        for (int i = 0; i < wordLimit && i < suffixLimit; i++) {
-            temp.Remove(temp.Length - 1, 1);
-            result.Add(temp.ToString());
-        }
-
-        return result;
     }
 
     static int[,] memo = new int[0,0];

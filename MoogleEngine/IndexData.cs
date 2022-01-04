@@ -5,20 +5,16 @@ namespace MoogleEngine;
 
 public class IndexData {
 
-    Dictionary<string, Dictionary<int, Occurrences>> words = new Dictionary<string, Dictionary<int, Occurrences>>(); // Toda la info sobre cada palabra que aparece
-    Dictionary<int, string> docs = new Dictionary<int, string>(); // Asignar un ID unico a cada documento
-
-    // Cada palabra recortada apunta a su palabra original
-    Dictionary<string, List<string>> variations = new Dictionary<string, List<string>>();
-
-    // Cada lexema apuntara a su palabra original
-    Dictionary<string, List<string>> lexems = new Dictionary<string, List<string>>();
-
     public IndexData() {
 
         Stopwatch crono = new Stopwatch();
         System.Console.WriteLine("Inicio...");
         crono.Start();
+
+        this.Words = new Dictionary<string, Dictionary<int, Occurrences>>();
+        this.Docs = new Dictionary<int, string>();
+        this.Variations = new Dictionary<string, List<string>>();
+        this.Roots = new Dictionary<string, List<string>>();
 
         string[] files = Directory.GetFiles("../Content", "*.txt", SearchOption.AllDirectories);
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
@@ -26,24 +22,32 @@ public class IndexData {
             StreamReader reader = new StreamReader(files[i]);
             List<Tuple<string, int>> wordList = GetWords(reader.ReadToEnd()); // Recibe el contenido crudo
             reader.Close();
-            docs.Add(i, files[i]); // Asignar un ID al documento
+            this.Docs.Add(i, files[i]); // Asignar un ID al documento
             
             foreach (var word in wordList) {
-                
-                // Poner aqui la generacion de la raiz
 
                 // La palabra sin acentos
                 string parsedWord = StringParser.ParseAccents(word.Item1);
 
-                if (!words.ContainsKey(parsedWord)) { // Inicializar el array de docs de cada palabra
-                    words.Add(parsedWord, new Dictionary<int, Occurrences>());
+                // Inicializar el diccionario al que apunta cada palabra y obtener su raiz
+                if (!(this.Words.ContainsKey(parsedWord))) {
+
+                    this.Words.Add(parsedWord, new Dictionary<int, Occurrences>());
+
+                    // Generacion de la raiz
+                    string root = Stemming.GetRoot(parsedWord);
+                    // Si no se ha usado esta raiz, inicializar su lista
+                    if (!(this.Roots.ContainsKey(root))) {
+                        this.Roots.Add(root, new List<string>());
+                    }
+                    this.Roots[root].Add(parsedWord); // Le agrega la palabra original a esta raiz
+
                     GetSubwords(parsedWord);
-                    GetLexems(parsedWord);
                 }
-                if (!(words[parsedWord].ContainsKey(i))) { // Inicializar las ocurrencias en un doc especifico
-                    words[parsedWord][i] = new Occurrences();
+                if (!(this.Words[parsedWord].ContainsKey(i))) { // Inicializar las ocurrencias en un doc especifico
+                    this.Words[parsedWord][i] = new Occurrences();
                 }
-                words[parsedWord][i].Push(word.Item2); // Agrega una nueva ocurrencia de la palabra en el doc
+                this.Words[parsedWord][i].Push(word.Item2); // Agrega una nueva ocurrencia de la palabra en el doc
             }
         }
 
@@ -51,13 +55,17 @@ public class IndexData {
         System.Console.WriteLine("✅ Indexado en {0}ms", crono.ElapsedMilliseconds);
     }
 
-    public Dictionary<string, Dictionary<int, Occurrences>> Words { get { return words; } }
+    // Guarda todas las palabras, cada una apuntando a los documentos donde aparece
+    public Dictionary<string, Dictionary<int, Occurrences>> Words { get; private set; }
 
-    public Dictionary<int, string> Docs { get { return docs; } }
+    // Asignar un ID unico a cada documento
+    public Dictionary<int, string> Docs { get; private set; }
 
-    public Dictionary<string, List<string>> Variations { get { return variations; } }
+    // Cada palabra recortada apunta a su palabra original
+    public Dictionary<string, List<string>> Variations { get; private set; }
 
-    public Dictionary<string, List<string>> Lexems { get { return lexems; } }
+    // Cada raiz apunta a sus palabras de origen
+    public Dictionary<string, List<string>> Roots { get; private set; }
 
     List<Tuple<string, int>> GetWords(string content) { // Devuelve la lista de las palabras existentes y su ubicacion
         List<Tuple<string, int>> result = new List<Tuple<string, int>> (); // <palabra, posicionDeInicio, posicionFinal + 1>
@@ -92,22 +100,10 @@ public class IndexData {
         List<string> derivates = SubWords.GetDerivates(word);
         foreach (string subword in derivates) {
             
-            if (!(variations.ContainsKey(subword))) {
-                variations[subword] = new List<string>();
+            if (!(this.Variations.ContainsKey(subword))) {
+                this.Variations[subword] = new List<string>();
             }
-            variations[subword].Add(word);
-        }
-    }
-
-    void GetLexems(string word) {
-
-        List<string> prefixes = SubWords.GetPrefixes(word);
-        foreach (string prefix in prefixes) {
-            
-            if (!(lexems.ContainsKey(prefix))) {
-                lexems[prefix] = new List<string>();
-            }
-            lexems[prefix].Add(word);
+            this.Variations[subword].Add(word);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MoogleEngine;
 
@@ -88,5 +89,9 @@ public static class StringParser { // Clase para el manejo y formateo de strings
         result.TrimEnd(); // Eliminando los posibles operadores sobrantes al final y ajustando tamaños
 
         return result;
+    }
+
+    public static bool IsVowel(char c) {
+        return Regex.IsMatch(c.ToString(), "[aeiouáéíóúü]");
     }
 }

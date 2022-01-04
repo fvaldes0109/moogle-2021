@@ -269,24 +269,23 @@ public static class SearchEngine {
     static List<PartialItem> GetSameRoot(IndexData data, string word) {
 
         // Buscando los lexemas de la palabra
-        List<string> roots = SubWords.GetPrefixes(word);
+        string root = Stemming.GetRoot(word);
         List<PartialItem> results = new List<PartialItem>();
 
-        // Iterando por cada lexema
-        foreach (string prefix in roots) {
-            if (data.Lexems.ContainsKey(prefix)) {
-                // Iterando por cada posible origen
-                foreach (string possibleOrigin in data.Lexems[prefix]) {
-                    if (word != possibleOrigin) {
-                        // Distancia entre la nueva palabra y la original
-                        float priority = 1.0f - (float)SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
-                        // Buscando la nueva palabra en cada documento
-                        List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, 0, priority * 0.001f));
-                        results.AddRange(newResults);
-                    }
+        // Revisando si el lexema existe
+        if (data.Roots.ContainsKey(root)) {
+            // Iterando por cada posible origen
+            foreach (string possibleOrigin in data.Roots[root]) {
+                if (word != possibleOrigin) {
+                    // Distancia entre la nueva palabra y la original
+                    float priority = 1.0f - (float)SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
+                    // Buscando la nueva palabra en cada documento
+                    List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, 0, priority * 0.001f));
+                    results.AddRange(newResults);
                 }
             }
         }
+
         // Ordenando los resultados
         results = results.OrderByDescending(x => data.Words[x.Word][x.Document].Relevance * x.Multiplier).ToList();
         return results;
