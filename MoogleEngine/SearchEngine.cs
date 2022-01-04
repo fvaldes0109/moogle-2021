@@ -242,7 +242,7 @@ public static class SearchEngine {
                     // Verificando que no sugiera la palabra original
                     if (word != possibleOrigin) {
                         // Hallando la distancia entre la palabra escrita y la sugerencia
-                        float priority = 1.0f - (float)SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
+                        float priority = 1.0f - SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
                         // Calculando los TF-IDF de la sugerencia en cada doc
                         if (!(cumulativeWord.ContainsKey(possibleOrigin))) {
                             cumulativeWord[possibleOrigin] = priority;
@@ -257,7 +257,7 @@ public static class SearchEngine {
         if (cumulativeWord.Count > 0) {
             //Determinando la sugerencia de mayor relevancia
             string result = cumulativeWord.OrderByDescending(x => x.Value).ToList()[0].Key;
-            float finalMult = 1.0f / (float)SubWords.Distance(result, word);
+            float finalMult = 1.0f / SubWords.Distance(result, word);
             return new Tuple<string, float> (result, finalMult);
         }
         else {
@@ -281,7 +281,7 @@ public static class SearchEngine {
             foreach (string possibleOrigin in data.Roots[root]) {
                 if (word != possibleOrigin) {
                     // Distancia entre la nueva palabra y la original
-                    float priority = 1.0f - (float)SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
+                    float priority = 1.0f - SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
                     // Buscando la nueva palabra en cada documento
                     List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, 0, priority * 0.1f));
                     results.AddRange(newResults);

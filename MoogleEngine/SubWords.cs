@@ -25,21 +25,21 @@ public static class SubWords {
         return adding;
     }
 
-    static int[,] memo = new int[0,0];
+    static float[,] memo = new float[0,0];
     static bool[,] mk = new bool[0,0];
     // Devuelve las diferencias entre dos palabras (caracteres distintos o diferencia de longitud)
-    public static int Distance(string a, string b) {
+    public static float Distance(string a, string b) {
         
         int m = a.Length;
         int n = b.Length;
-        memo = new int[m + 1, n + 1];
+        memo = new float[m + 1, n + 1];
         mk = new bool[m + 1, n + 1];
 
         return EditDistance(a, b, m, n);
     }
 
     // Algoritmo Edit Distance para calcular las diferencias entre dos palabras
-    static int EditDistance(string a, string b, int i, int j) {
+    static float EditDistance(string a, string b, int i, int j) {
 
         if (i == 0) return j;
         if (j == 0) return i;
@@ -52,7 +52,7 @@ public static class SubWords {
             return memo[i, j];
         }
         else {
-            memo[i, j] = 1 + Math.Min(EditDistance(a, b, i - 1, j - 1), Math.Min(EditDistance(a, b, i - 1, j), EditDistance(a, b, i, j - 1)));
+            memo[i, j] = Math.Min(1 + EditDistance(a, b, i - 1, j - 1), Math.Min(1.5f + EditDistance(a, b, i - 1, j), 1.5f + EditDistance(a, b, i, j - 1)));
             return memo[i, j];
         }
     }
