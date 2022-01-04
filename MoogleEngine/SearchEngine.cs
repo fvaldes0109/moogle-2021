@@ -151,10 +151,24 @@ public static class SearchEngine {
 
         List<PartialItem> result = new List<PartialItem>();
 
+        // Cuando se calcule el multiplicador de un documento, o se descarte se guarda aqui
+        // Esto evita recalcular el mismo documento varias veces
+        Dictionary<int, float> memo = new Dictionary<int, float> ();
+
         // Recorriendo y validando cada documento
         foreach (var partial in partials) {
 
             int Id = partial.Document;
+
+            // Si el documento ya se calculo
+            if (memo.ContainsKey(Id)) {
+                // Si no fue descartado, colocar el parcial en los resultados
+                if (memo[Id] != 0.0f) {
+                    partial.Multiply(memo[Id]);
+                    result.Add(partial);
+                }
+                continue;
+            }
 
             bool flag = true; // Bandera para detectar si el documento pasa todos los filtros
 
@@ -218,8 +232,12 @@ public static class SearchEngine {
                     }
                 }
                 partial.Multiply(maxMult);
+                memo[Id] = maxMult;
 
                 result.Add(partial);
+            }
+            else {
+                memo[Id] = 0.0f;
             }
         }
 
