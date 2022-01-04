@@ -26,7 +26,7 @@ public static class SearchEngine {
         if (!(data.Words.ContainsKey(word))) {
             Tuple<string, float> suggestion = GetSuggestions(data, word);
             if (suggestion.Item1 != "") {
-                lowerResults.AddRange(GetOneWord(data, suggestion.Item1, 0, suggestion.Item2, word));
+                lowerResults.AddRange(GetOneWord(data, suggestion.Item1, 0, suggestion.Item2, word, true));
             }
         }
         else {
@@ -38,7 +38,7 @@ public static class SearchEngine {
             if (items.Count < minAcceptable) {
                 Tuple<string, float> suggestion = GetSuggestions(data, word);
                 if (suggestion.Item1 != "") {
-                    items.AddRange(GetOneWord(data, suggestion.Item1, 0, suggestion.Item2, word));
+                    items.AddRange(GetOneWord(data, suggestion.Item1, 0, suggestion.Item2, word, true));
                 }
             }
         }
