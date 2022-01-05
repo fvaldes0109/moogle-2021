@@ -42,7 +42,7 @@ public static class Moogle
 
             // Agregando las apariciones mas relevantes de cada palabra a una lista
             foreach (var word in words) {
-                partials.AddRange(new List<PartialItem> (SearchEngine.GetOneWord(data, word, minForSuggestion, sameRoot: true)));
+                partials.AddRange(SearchEngine.GetOneWord(data, word, minForSuggestion, sameRoot: true));
             }
             List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials, parsedInput, finalResults);
 

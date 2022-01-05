@@ -35,7 +35,17 @@ public static class SubWords {
         memo = new float[m + 1, n + 1];
         mk = new bool[m + 1, n + 1];
 
-        return EditDistance(a, b, m, n);
+        float d1 = EditDistance(a, b, m, n);
+        
+        // Debido a que el costo de edicion es menor, se calculara la distancia desde el inicio
+        // de las cadenas, para contrarrestar los posibles casos en que falle
+        // Ejemplo: Cuando el cambio es una adicion al principio de la cadena, devolvia 1 en vez de 1.5
+
+        memo = new float[m + 1, n + 1];
+        mk = new bool[m + 1, n + 1];
+
+        float d2 = EditDistance(a.Reverse().ToString(), b.Reverse().ToString(), m, n);
+        return Math.Max(d1, d2);
     }
 
     // Algoritmo Edit Distance para calcular las diferencias entre dos palabras
@@ -52,7 +62,8 @@ public static class SubWords {
             return memo[i, j];
         }
         else {
-            memo[i, j] = Math.Min(1 + EditDistance(a, b, i - 1, j - 1), Math.Min(1.5f + EditDistance(a, b, i - 1, j), 1.5f + EditDistance(a, b, i, j - 1)));
+            // Se le dara menos costo a la edicion de un caracter
+            memo[i, j] = Math.Min(1.0f + EditDistance(a, b, i - 1, j - 1), Math.Min(1.5f + EditDistance(a, b, i - 1, j), 1.5f + EditDistance(a, b, i, j - 1)));
             return memo[i, j];
         }
     }
