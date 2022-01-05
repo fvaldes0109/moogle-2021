@@ -199,7 +199,7 @@ public static class SearchEngine {
 
                     // Si estamos analizando la misma palabra
                     if (pair.Item1 == partial.Word) {
-                        partial.Multiply((float)(Math.Pow(pair.Item2 + 1, pair.Item2 + 1)));
+                        partial.Multiply((float)(Math.Pow(pair.Item2 + 1, 2)));
                     }
                 }
 
