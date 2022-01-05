@@ -99,13 +99,15 @@ public static class Stemming {
         string prevB = LongestSuffix(tillSuffix, prePronounB);
         string prevC = LongestSuffix(tillSuffix, prePronounC);
 
-        if (prevB != "") prevPron = prevB;
-        else if (prevC != "" && tillSuffix.Length - prevC.Length >= 1 && tillSuffix[tillSuffix.Length - prevC.Length - 1] == 'u') {
-            prevPron = prevC;
-        }
+        if (result.Length - suffix.Length >= R1) {
+            if (prevB != "") prevPron = prevB;
+            else if (prevC != "" && tillSuffix.Length - prevC.Length >= 1 && tillSuffix[tillSuffix.Length - prevC.Length - 1] == 'u') {
+                prevPron = prevC;
+            }
 
-        if (prevPron != "" && tillSuffix != "") {
-            result = tillSuffix;
+            if (prevPron != "" && tillSuffix != "") {
+                result = tillSuffix;
+            }
         }
 
         #endregion
@@ -232,7 +234,7 @@ public static class Stemming {
         if (resSuf != "" && result.Length - resSuf.Length >= RV) {
             result = result.Substring(0, result.Length - resSuf.Length);
         }
-        else if (result.EndsWith('e')) {
+        else if (result.EndsWith('e') && result.Length - 1 >= RV) {
             result = result.Substring(0, result.Length - 1);
             if (result.EndsWith("gu") && result.Length - 1 >= RV) {
                 result = result.Substring(0, result.Length - 1);
