@@ -342,10 +342,6 @@ public static class SearchEngine {
     // Dado un conjunto de posiciones y sus palabras, obtiene el snippet con mas palabras
     static string GetSnippet(string docPath, WordPositions positionsStore, bool hasRelevant) {
 
-        StreamReader reader = new StreamReader(docPath);
-        string content = reader.ReadToEnd();
-        reader.Close();
-        
         int maxPoints = 1; // El maximo de palabras en una vecindad
         int pivot = positionsStore.Positions.ElementAt(0); // El pivote de la vecindad
 
@@ -365,28 +361,56 @@ public static class SearchEngine {
             }
         }
 
-
-        string snippet = "";
-
+        StreamReader reader = new StreamReader(docPath);
         int left, right; // Los limites de la vecindad
+
+        // El tamaño en bytes del documento
+        int docSize = (int)reader.BaseStream.Length;
 
         // Calculando los limites
         if (pivot - snippetWidth / 4 < 0) { // Si el punto esta muy al comienzo del doc
             left = 0;
             right = snippetWidth;
         }
-        else if (pivot + snippetWidth - snippetWidth / 4 >= content.Length) { // Si esta muy al final
-            right = content.Length - 1;
-            left = content.Length - snippetWidth;
+        // Si esta muy al final
+        else if (pivot + snippetWidth - snippetWidth / 4 >= docSize) {
+            right = docSize;
+            left = docSize - snippetWidth;
         }
-        else {
+        else { // Si no esta cerca de los bordes
             left = pivot - snippetWidth / 4;
             right = pivot + snippetWidth - snippetWidth / 4;
         }
-        
-        snippet = content[left .. right];
 
-        return snippet;
+        // Colocando el puntero del stream al inicio del snippet
+        reader.BaseStream.Position = left;
+        
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < snippetWidth; i++) {
+            result.Append((char)reader.Read());
+        }
+        reader.Close();
+
+        return TrimSnippet(result);
+    }
+
+    // Busca y elimina caracteres invalidos en los bordes del snippet
+    // Pueden existir debido a que se esta trabajando con las posiciones en bytes del documento
+    // Si un caracter especial es picado, quedara un caracter invalido
+    // Ya de paso se eliminarian signos de puntuacion, dejando solo un alfanumerico en el borde
+    static string TrimSnippet(StringBuilder cad) {
+
+        // Trimeando el principio
+        while (StringParser.IsAlphaNum(cad[0]) == '\0') {
+            cad.Remove(0, 1);
+        }
+        // Trimeando el final
+        while (StringParser.IsAlphaNum(cad[cad.Length - 1]) == '\0') {
+            cad.Remove(cad.Length - 1, 1);
+        }
+
+        return cad.ToString();
     }
 
     // Calcula los puntos en la vecindad de la palabra
@@ -435,7 +459,7 @@ public static class SearchEngine {
         foreach (var partial in partials) {
 
             // Busca cual es la palabra original en el query de la que salio esta sugetencia
-            int pos = ArrayOperation.Find(originalWords, partial.Original);
+            int pos = ArrayOperations.Find(originalWords, partial.Original);
             // Si existe
             if (pos != -1) {
                 // Determina la distancia entre la palabra original y la sugerencia
@@ -454,10 +478,10 @@ public static class SearchEngine {
         if (bestSuggestions.Count > 0) {
             // Recorrer cada palabra que haya sido modificada
             foreach (var replace in bestSuggestions) {
-                int pos = ArrayOperation.Find(originalWords, replace.Key);
+                int pos = ArrayOperations.Find(originalWords, replace.Key);
                 originalWords[pos] = replace.Value.Item1;
             }
-            return ArrayOperation.String(originalWords);
+            return ArrayOperations.WordsToString(originalWords);
         }
         else return "@null";
     }

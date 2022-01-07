@@ -20,7 +20,7 @@ public class IndexData {
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
 
             StreamReader reader = new StreamReader(files[i]);
-            List<Tuple<string, int>> wordList = GetWords(reader.ReadToEnd()); // Recibe el contenido crudo
+            List<Tuple<string, int>> wordList = GetWords(reader); // Recibe el contenido crudo
             reader.Close();
             this.Docs.Add(i, files[i]); // Asignar un ID al documento
             
@@ -67,14 +67,18 @@ public class IndexData {
     // Cada raiz apunta a sus palabras de origen
     public Dictionary<string, List<string>> Roots { get; private set; }
 
-    List<Tuple<string, int>> GetWords(string content) { // Devuelve la lista de las palabras existentes y su ubicacion
-        List<Tuple<string, int>> result = new List<Tuple<string, int>> (); // <palabra, posicionDeInicio, posicionFinal + 1>
+    // Devuelve la lista de las palabras existentes y su ubicacion
+    List<Tuple<string, int>> GetWords(StreamReader reader) {
+        List<Tuple<string, int>> result = new List<Tuple<string, int>> (); // <palabra, posicionDeInicio>
 
+        // Aqui se ira almacenando cada palabra
         StringBuilder temp = new StringBuilder();
-        int start = 0;
-        for (int i = 0; i < content.Length; i++) {
-
-            char c = StringParser.IsAlphaNum(content[i]);
+        int start = 0; // La posicion inicial de la palabra a guardar (en bytes)
+        while (!reader.EndOfStream) {
+            
+            char original = (char)reader.Read();
+            // Parsea el caracter
+            char c = StringParser.IsAlphaNum(original);
             if (c != '\0') {
                 temp.Append(c); // Si es un caracter alfanumerico sera parte de una palabra
             }
@@ -82,11 +86,14 @@ public class IndexData {
                 if (temp.Length > 0) { // Para controlar el caso de dos caracteres no alfanumericos juntos
                     result.Add(new Tuple<string, int> (temp.ToString(), start));
                 }
-                start = i + 1;
+                // Avanza la posicion inicial en la cantidad de bytes de la palabra que se agrego
+                // Mas cualquier caracter no alfanumerico que aparezca
+                start += Encoding.Default.GetByteCount(temp.Append(original).ToString());
                 temp.Clear();
             }
         }
 
+        // Agregando la ultima palabra
         if (temp.Length != 0) {
             result.Add(new Tuple<string, int> (temp.ToString(), start));
         }

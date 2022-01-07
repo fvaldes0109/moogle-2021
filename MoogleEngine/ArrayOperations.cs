@@ -3,7 +3,7 @@ using System.Text;
 namespace MoogleEngine;
 
 // Algunas operaciones basicas sobre un array
-public static class ArrayOperation {
+public static class ArrayOperations {
 
     // Busca un string en el arreglo
     public static int Find(string[] array, string word) {
@@ -13,7 +13,8 @@ public static class ArrayOperation {
         return -1;
     }
 
-    public static string String(string[] array) {
+    // Convierte un arreglo de string (palabras) a un string representando una frase
+    public static string WordsToString(string[] array) {
 
         StringBuilder result = new StringBuilder();
         foreach (string word in array) {
