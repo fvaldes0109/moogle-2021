@@ -7,6 +7,10 @@ public static class Moogle
 
     static int minForSuggestion = 2; // Cantidad de resultados minimas para que no salte una sugerencia
 
+    // Si al calcular el IDF la razon Frecuencia / TotalDocs da mayor que el valor, se tomara como 1
+    // Esto anula el TF-IDF de las palabras que aparecen en casi todos los documentos
+    static float percentToNullify = 0.9f;
+
     static IndexData data;
 
     public static void Init() {
@@ -18,10 +22,10 @@ public static class Moogle
         foreach (var pair in data.Words) {
             
             foreach (var doc in pair.Value) {
-
+                
                 float tf = (float)Math.Log2((float)doc.Value.StartPos.Count + 1);
                 float idf = (float)Math.Log2((float)(data.Docs.Count) / (float)pair.Value.Count);
-                doc.Value.Relevance = tf * idf;
+                doc.Value.Relevance = ((float)pair.Value.Count / (float)data.Docs.Count < percentToNullify ? tf * idf : 0.0f);
             }
         }
 
