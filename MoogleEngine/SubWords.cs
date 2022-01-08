@@ -44,7 +44,7 @@ public static class SubWords {
         memo = new float[m + 1, n + 1];
         mk = new bool[m + 1, n + 1];
 
-        float d2 = EditDistance(a.Reverse().ToString(), b.Reverse().ToString(), m, n);
+        float d2 = EditDistance(ArrayOperations.Reverse(a), ArrayOperations.Reverse(b), m, n);
         return Math.Max(d1, d2);
     }
 

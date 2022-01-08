@@ -126,9 +126,11 @@ public class IndexData {
 
         StreamReader reader = new StreamReader("./MoogleEngine/Thesaurus.csv");
 
-        while (!reader.EndOfStream) {
+        while (true) {
             // Leyendo cada linea
-            string rawLine = reader.ReadLine();
+            var rawLine = reader.ReadLine();
+            // Si llegamos al final del archivo, terminar el ciclo
+            if (rawLine == null) break;
             // Toda una fila de palabras relacionadas
             string[] words = rawLine.Split(new char[] {',', ' '});
 
