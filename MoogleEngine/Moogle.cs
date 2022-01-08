@@ -55,4 +55,29 @@ public static class Moogle
 
         return result;
     }
+
+    // Devuelve una lista ordenada de las palabras ordenadas por frecuencia junto a su TF-IDF
+    public static List<Tuple<string, int, int, float>> FrequentWords() {
+        
+        List<Tuple<string, int, int, float>> result = new List<Tuple<string, int, int, float>>();
+
+        foreach (var word in data.Words) {
+            
+            int docs = 0;
+            int freq = 0;
+            float tfidf = 0.0f;
+            foreach (var occurrences in word.Value) {
+                docs++;
+                freq += occurrences.Value.StartPos.Count;
+                tfidf += occurrences.Value.Relevance;
+            }
+            result.Add(new Tuple<string, int, int, float>(word.Key, docs, freq, tfidf));
+        }
+
+        return result.OrderBy(x => x.Item4).ToList();
+    }
+
+    public static int DocumentAmount() {
+        return data.Docs.Count;
+    }
 }

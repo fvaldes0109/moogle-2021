@@ -17,7 +17,7 @@ public class IndexData {
         this.Roots = new Dictionary<string, List<string>>();
         this.Synonyms = new Dictionary<string, List<string>>();
 
-        string[] files = Directory.GetFiles("../Content", "*.txt", SearchOption.AllDirectories);
+        string[] files = Directory.GetFiles("./Content", "*.txt", SearchOption.AllDirectories);
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
 
             StreamReader reader = new StreamReader(files[i]);
@@ -36,14 +36,14 @@ public class IndexData {
                     this.Words.Add(parsedWord, new Dictionary<int, Occurrences>());
 
                     // Generacion de la raiz
-                    string root = Stemming.GetRoot(parsedWord);
-                    // Si no se ha usado esta raiz, inicializar su lista
-                    if (!(this.Roots.ContainsKey(root))) {
-                        this.Roots.Add(root, new List<string>());
-                    }
-                    this.Roots[root].Add(parsedWord); // Le agrega la palabra original a esta raiz
+                    // string root = Stemming.GetRoot(parsedWord);
+                    // // Si no se ha usado esta raiz, inicializar su lista
+                    // if (!(this.Roots.ContainsKey(root))) {
+                    //     this.Roots.Add(root, new List<string>());
+                    // }
+                    // this.Roots[root].Add(parsedWord); // Le agrega la palabra original a esta raiz
 
-                    GetSubwords(parsedWord);
+                    // GetSubwords(parsedWord);
                 }
                 if (!(this.Words[parsedWord].ContainsKey(i))) { // Inicializar las ocurrencias en un doc especifico
                     this.Words[parsedWord][i] = new Occurrences();
@@ -55,8 +55,8 @@ public class IndexData {
         crono.Stop();
         System.Console.WriteLine("✅ Indexado en {0}ms", crono.ElapsedMilliseconds);
 
-        LoadSynonyms();
-        System.Console.WriteLine("✅ Sinonimos guardados");
+        // LoadSynonyms();
+        // System.Console.WriteLine("✅ Sinonimos guardados");
     }
 
     // Guarda todas las palabras, cada una apuntando a los documentos donde aparece
@@ -124,7 +124,7 @@ public class IndexData {
     // Carga todos los sinonimos en Thesaurus.csv y los guarda en Synonyms
     void LoadSynonyms() {
 
-        StreamReader reader = new StreamReader("../MoogleEngine/Thesaurus.csv");
+        StreamReader reader = new StreamReader("./MoogleEngine/Thesaurus.csv");
 
         while (!reader.EndOfStream) {
             // Leyendo cada linea
