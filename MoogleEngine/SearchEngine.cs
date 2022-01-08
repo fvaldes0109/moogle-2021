@@ -50,7 +50,17 @@ public static class SearchEngine {
             foreach (var doc in info) {
                 items.Add(new PartialItem(word, doc.Key, multiplier, original));
             }
-            // Si hay muy pocos resultados, generar sugerencias
+        }
+
+        // Generando las palabras de raiz similar
+        if (relatedWords) {
+            lowerResults.AddRange(GetSameRoot(data, word));
+            lowerResults.AddRange(GetSynonyms(data, word));
+        }
+
+        items.AddRange(lowerResults);
+
+        // Si hay muy pocos resultados, generar sugerencias
             if (items.Count < minAcceptable) {
                 
                 List<Tuple<string, float>> suggestions = GetSuggestions(data, word);
@@ -62,15 +72,7 @@ public static class SearchEngine {
                     }
                 }
             }
-        }
 
-        // Generando las palabras de raiz similar
-        if (relatedWords) {
-            lowerResults.AddRange(GetSameRoot(data, word));
-            lowerResults.AddRange(GetSynonyms(data, word));
-        }
-
-        items.AddRange(lowerResults);
         return items;
     }
 
