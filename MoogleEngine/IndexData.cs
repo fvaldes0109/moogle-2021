@@ -15,6 +15,7 @@ public class IndexData {
         this.Docs = new Dictionary<int, string>();
         this.Variations = new Dictionary<string, List<string>>();
         this.Roots = new Dictionary<string, List<string>>();
+        this.Synonyms = new Dictionary<string, List<string>>();
 
         string[] files = Directory.GetFiles("../Content", "*.txt", SearchOption.AllDirectories);
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
@@ -53,6 +54,9 @@ public class IndexData {
 
         crono.Stop();
         System.Console.WriteLine("✅ Indexado en {0}ms", crono.ElapsedMilliseconds);
+
+        LoadSynonyms();
+        System.Console.WriteLine("✅ Sinonimos guardados");
     }
 
     // Guarda todas las palabras, cada una apuntando a los documentos donde aparece
@@ -66,6 +70,9 @@ public class IndexData {
 
     // Cada raiz apunta a sus palabras de origen
     public Dictionary<string, List<string>> Roots { get; private set; }
+
+    // Para cada palabra en el Thesaurus.csv almacena sus sinonimos
+    public Dictionary<string, List<string>> Synonyms { get; private set; }
 
     // Devuelve la lista de las palabras existentes y su ubicacion
     List<Tuple<string, int>> GetWords(StreamReader reader) {
@@ -111,6 +118,34 @@ public class IndexData {
                 this.Variations[subword] = new List<string>();
             }
             this.Variations[subword].Add(word);
+        }
+    }
+
+    // Carga todos los sinonimos en Thesaurus.csv y los guarda en Synonyms
+    void LoadSynonyms() {
+
+        StreamReader reader = new StreamReader("../MoogleEngine/Thesaurus.csv");
+
+        while (!reader.EndOfStream) {
+            // Leyendo cada linea
+            string rawLine = reader.ReadLine();
+            // Toda una fila de palabras relacionadas
+            string[] words = rawLine.Split(new char[] {',', ' '});
+
+            if (words[0] == "key" && words[1] == "synonyms") continue;
+
+            // Iterando por cada palabra, y guardando las otras en su posicion del diccionario
+            for (int i = 0; i < words.Length; i++) {
+                for (int j = 0; j < words.Length; j++) {
+                    
+                    if (i == j) continue; // No se va a relacionar cada palabra con sigo misma
+
+                    if (!Synonyms.ContainsKey(words[i])) {
+                        Synonyms[words[i]] = new List<string>();
+                    }
+                    Synonyms[words[i]].Add(words[j]);
+                }
+            }
         }
     }
 }

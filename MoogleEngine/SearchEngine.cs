@@ -19,9 +19,12 @@ public static class SearchEngine {
     // Si una sugerencia genera al menos estos resultados, no se agregaran mas sugerencias a la busqueda
     static int resultsWithSuggestion = 5;
 
-    // Busca los docs mas relevantes que contengan la palabra
-    // MinAcceptable indica la cantidad minima de resultados para no generar sugerencias
-    public static List<PartialItem> GetOneWord(IndexData data, string word, int minAcceptable, float multiplier = 1.0f, string original = "", bool sameRoot = false) { 
+    // Busca los docs mas relevantes que contengan la palabra 'word'
+    // minAcceptable indica la cantidad minima de resultados para no generar sugerencias
+    // multiplier es el multiplicador a aplicarle al parcial
+    // original: en caso de estar procesando una sugerencia, original es la palabra original del query
+    // relatedWords indica si se desea generar las misma-raiz y los sinonimos
+    public static List<PartialItem> GetOneWord(IndexData data, string word, int minAcceptable, float multiplier = 1.0f, string original = "", bool relatedWords = false) { 
 
         // Para guardar los parciales finales
         List<PartialItem> items = new List<PartialItem> ();
@@ -62,8 +65,9 @@ public static class SearchEngine {
         }
 
         // Generando las palabras de raiz similar
-        if (sameRoot) {
+        if (relatedWords) {
             lowerResults.AddRange(GetSameRoot(data, word));
+            lowerResults.AddRange(GetSynonyms(data, word));
         }
 
         items.AddRange(lowerResults);
@@ -337,6 +341,44 @@ public static class SearchEngine {
         // Ordenando los resultados
         results = results.OrderByDescending(x => data.Words[x.Word][x.Document].Relevance * x.Multiplier).ToList();
         return results;
+    }
+
+    // Genera las mejores sugerencias para una palabra. Devuelve la palabra y el multiplicador
+    static List<PartialItem> GetSynonyms(IndexData data, string word) {
+        
+        // Obteniendo la raiz de la palabra
+        string root = Stemming.GetRoot(word);
+
+        // Aqui van los sinonimos de la palabra
+        List<string> rawSynonyms = new List<string>();
+
+        // Para guardar los resultados
+        List<PartialItem> result = new List<PartialItem>();
+
+        if (data.Roots.ContainsKey(root)) {
+            // Recorriendo cada palabra con la misma raiz que la enviada
+            foreach (string possibleOrigin in data.Roots[root]) {
+                // Si la palabra generada contiene sinonimos, los guardamos en la lista
+                if (data.Synonyms.ContainsKey(possibleOrigin)) {
+                    rawSynonyms.AddRange(data.Synonyms[possibleOrigin]);
+                }
+            }
+        }
+
+        // Recorriendo cada sinonimo crudo resultante
+        foreach (string rawSynonym in rawSynonyms) {
+            // Obteniendo su raiz
+            string synRoot = Stemming.GetRoot(rawSynonym);
+
+            if (data.Roots.ContainsKey(synRoot)) {
+                // Buscando cada palabra con la misma raiz que rawSynonym
+                foreach (string derivedSynonym in data.Roots[synRoot]) {
+                    // Buscando derivedSynonym en los documentos y agregando los resultados
+                    result.AddRange(GetOneWord(data, derivedSynonym, 0, 0.001f, "", false));
+                }
+            }
+        }
+        return result;
     }
 
     // Dado un conjunto de posiciones y sus palabras, obtiene el snippet con mas palabras
