@@ -11,12 +11,10 @@ public static class Moogle
     // Esto anula el TF-IDF de las palabras que aparecen en casi todos los documentos
     static float percentToNullify = 0.9f;
 
-    static IndexData data;
+    // La 1ra vez que se acceda a esta clase, se indexaran todas las palabras
+    static IndexData data = new IndexData();
 
     public static void Init() {
-
-        // Leyendo y guardando todas las palabras
-        data = new IndexData();
 
         // Calculando los TF-IDF
         foreach (var pair in data.Words) {
