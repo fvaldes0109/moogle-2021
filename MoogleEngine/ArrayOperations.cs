@@ -24,4 +24,12 @@ public static class ArrayOperations {
         result.Remove(result.Length - 1, 1);
         return result.ToString();
     }
+
+    // Invierte un string
+    public static string Reverse(string s) {
+
+        char[] charArray = s.ToCharArray();
+        Array.Reverse(charArray);
+        return new string(charArray);
+    }
 }
