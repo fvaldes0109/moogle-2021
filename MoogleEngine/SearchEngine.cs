@@ -489,9 +489,7 @@ public static class SearchEngine {
         // Hallando cuantas palabras diferentes existen en el rango
         HashSet<string> diffWords = new HashSet<string>();
         foreach (int pos in rangeSet) {
-            if (!(diffWords.Contains(positionsStore.Words[pos]))) {
-                diffWords.Add(positionsStore.Words[pos]);
-            }
+            diffWords.Add(positionsStore.Words[pos]);
         }
 
         return diffWords.Count;
