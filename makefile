@@ -8,4 +8,4 @@ dev:
 
 .PHONY: test
 test:
-	dotnet run --project TesterEntry
+	dotnet run --project TesterEntry --amount $(amount)
