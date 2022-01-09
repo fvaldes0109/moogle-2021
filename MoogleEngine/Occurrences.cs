@@ -15,7 +15,7 @@ public class Occurrences {
             return tfidf;
         }
         set {
-            tfidf = (value == 0 ? 0.000001f : value);
+            tfidf = (value == 0 ? 0.000000001f : value);
         }
     } 
 

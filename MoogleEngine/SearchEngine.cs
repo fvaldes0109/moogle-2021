@@ -13,18 +13,23 @@ public static class SearchEngine {
     // Las longitudes de los rangos para el operador ~
     static int[] closerDiameter = new int[] { 20, 50, 100, 150 };
 
+    // La cantidad minima de documentos que debe generar una palabra para no procesar sus sugerencias
+    static int minAcceptable = 3;
+
     // La cantidad de sugerencias que se buscaran por una palabra mal escrita
     static int suggestionsByWord = 3;
 
     // Si una sugerencia genera al menos estos resultados, no se agregaran mas sugerencias a la busqueda
     static int resultsWithSuggestion = 5;
 
+    #region Metodos publicos
+
     // Busca los docs mas relevantes que contengan la palabra 'word'
-    // minAcceptable indica la cantidad minima de resultados para no generar sugerencias
+    // suggest indica si se desea generar las sugerencias de la palabra
     // multiplier es el multiplicador a aplicarle al parcial
     // original: en caso de estar procesando una sugerencia, original es la palabra original del query
     // relatedWords indica si se desea generar las misma-raiz y los sinonimos
-    public static List<PartialItem> GetOneWord(IndexData data, string word, int minAcceptable, float multiplier = 1.0f, string original = "", bool relatedWords = false) { 
+    public static List<PartialItem> GetOneWord(IndexData data, string word, bool suggest = false, float multiplier = 1.0f, string original = "", bool relatedWords = false) { 
 
         // Para guardar los parciales finales
         List<PartialItem> items = new List<PartialItem> ();
@@ -36,10 +41,10 @@ public static class SearchEngine {
             
             List<Tuple<string, float>> suggestions = GetSuggestions(data, word);
             // Si existen sugerencias
-            if (suggestions.Count > 0) {
+            if (suggest && suggestions.Count > 0) {
                 // Hallar los parciales de cada una
                 foreach (var suggestion in suggestions) {
-                    lowerResults.AddRange(GetOneWord(data, suggestion.Item1, 0, suggestion.Item2, word, true));
+                    lowerResults.AddRange(GetOneWord(data, suggestion.Item1, false, suggestion.Item2, word, true));
                     // Si se considera que se hayaron suficientes sugerencias, no agregar mas
                     if (lowerResults.Count >= resultsWithSuggestion) break;
                 }
@@ -61,12 +66,12 @@ public static class SearchEngine {
         items.AddRange(lowerResults);
 
         // Si hay muy pocos resultados, generar sugerencias
-            if (items.Count < minAcceptable) {
+            if (suggest && PartialItem.CountDocuments(items) < minAcceptable) {
                 
                 List<Tuple<string, float>> suggestions = GetSuggestions(data, word);
                 if (suggestions.Count > 0) {
                     foreach (var suggestion in suggestions) {
-                        items.AddRange(GetOneWord(data, suggestion.Item1, 0, suggestion.Item2, word, true));
+                        items.AddRange(GetOneWord(data, suggestion.Item1, false, suggestion.Item2, word, true));
                         // Si se considera que se hayaron suficientes sugerencias, no agregar mas
                         if (items.Count >= resultsWithSuggestion) break;
                     }
@@ -74,6 +79,37 @@ public static class SearchEngine {
             }
 
         return items;
+    }
+
+    // Devuelve una lista ordenada con documentos a mostrar
+    public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, ParsedInput parsedInput, int amount) {
+
+        List<PartialItem> filtered = FilterByOperators(data, partials, parsedInput);
+
+        // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
+        Dictionary<int, CumulativeScore> relevances = new Dictionary<int, CumulativeScore> ();
+
+        // Iterando por los resultados parciales analizados
+        foreach (var partial in filtered) {
+            
+            Dictionary<int, Occurrences> info = data.Words[partial.Word];
+            // Si no se ha analizado el documento, se creara su clave
+            if (!(relevances.ContainsKey(partial.Document))) {
+                relevances.Add(partial.Document, new CumulativeScore());
+            }
+            relevances[partial.Document].AddWord(info[partial.Document].Relevance, partial);
+        }
+
+        // Ordena los documentos por su relevancia total
+        var sortedRelevances = relevances.OrderByDescending(x => x.Value.TotalScore).ToList();
+
+        List<CumulativeScore> results = new List<CumulativeScore>();
+
+        for (int i = 0; i < sortedRelevances.Count && i < amount; i++) {
+            results.Add(sortedRelevances[i].Value);
+        }
+
+        return results;
     }
 
     // Genera la lista de resultados finales
@@ -134,36 +170,9 @@ public static class SearchEngine {
         return new SearchResult(items.ToArray(), suggestions);
     }
 
-    // Devuelve una lista ordenada con documentos a mostrar
-    public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, ParsedInput parsedInput, int amount) {
+    #endregion
 
-        List<PartialItem> filtered = FilterByOperators(data, partials, parsedInput);
-
-        // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
-        Dictionary<int, CumulativeScore> relevances = new Dictionary<int, CumulativeScore> ();
-
-        // Iterando por los resultados parciales analizados
-        foreach (var partial in filtered) {
-            
-            Dictionary<int, Occurrences> info = data.Words[partial.Word];
-            // Si no se ha analizado el documento, se creara su clave
-            if (!(relevances.ContainsKey(partial.Document))) {
-                relevances.Add(partial.Document, new CumulativeScore());
-            }
-            relevances[partial.Document].AddWord(info[partial.Document].Relevance, partial);
-        }
-
-        // Ordena los documentos por su relevancia total
-        var sortedRelevances = relevances.OrderByDescending(x => x.Value.TotalScore).ToList();
-
-        List<CumulativeScore> results = new List<CumulativeScore>();
-
-        for (int i = 0; i < sortedRelevances.Count && i < amount; i++) {
-            results.Add(sortedRelevances[i].Value);
-        }
-
-        return results;
-    }
+    #region Metodos privados
 
     // Recibe una lista de parciales y los filtra segun los operadores dados por el usuario
     static List<PartialItem> FilterByOperators(IndexData data, List<PartialItem> partials, ParsedInput parsedInput) {
@@ -312,8 +321,8 @@ public static class SearchEngine {
 
             i++;
         }
-
-        return result;
+        // Ordenando y devolviendo las sugerencias finales
+        return result.OrderByDescending(x => x.Item2).ToList();
     }
 
     // Para buscar los resultados de las palabras con la misma raiz
@@ -334,7 +343,7 @@ public static class SearchEngine {
                     // Distancia entre la nueva palabra y la original
                     float priority = 1.0f - SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
                     // Buscando la nueva palabra en cada documento
-                    List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, 0, priority * 0.1f));
+                    List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, false, priority * 0.1f));
                     results.AddRange(newResults);
                 }
             }
@@ -376,7 +385,7 @@ public static class SearchEngine {
                 // Buscando cada palabra con la misma raiz que rawSynonym
                 foreach (string derivedSynonym in data.Roots[synRoot]) {
                     // Buscando derivedSynonym en los documentos y agregando los resultados
-                    result.AddRange(GetOneWord(data, derivedSynonym, 0, 0.001f, "", false));
+                    result.AddRange(GetOneWord(data, derivedSynonym, false, 0.001f));
                 }
             }
         }
@@ -486,9 +495,7 @@ public static class SearchEngine {
         // Hallando cuantas palabras diferentes existen en el rango
         HashSet<string> diffWords = new HashSet<string>();
         foreach (int pos in rangeSet) {
-            if (!(diffWords.Contains(positionsStore.Words[pos]))) {
-                diffWords.Add(positionsStore.Words[pos]);
-            }
+            diffWords.Add(positionsStore.Words[pos]);
         }
 
         return diffWords.Count;
@@ -529,4 +536,6 @@ public static class SearchEngine {
         }
         else return "@null";
     }
+
+    #endregion
 }

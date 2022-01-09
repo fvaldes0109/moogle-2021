@@ -25,4 +25,15 @@ public class PartialItem { // Representa los datos minimos de un resultado
     public void Multiply(int value) {
         this.Multiplier *= value;
     }
+
+    // Devuelve la cantidad de documentos diferentes en una lista de parciales
+    public static int CountDocuments(List<PartialItem> partials) {
+        
+        HashSet<int> docs = new HashSet<int>();
+
+        foreach (var item in partials) {
+            docs.Add(item.Document);
+        }
+        return docs.Count;
+    }
 }
