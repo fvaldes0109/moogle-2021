@@ -22,6 +22,8 @@ public static class SearchEngine {
     // Si una sugerencia genera al menos estos resultados, no se agregaran mas sugerencias a la busqueda
     static int resultsWithSuggestion = 5;
 
+    #region Metodos publicos
+
     // Busca los docs mas relevantes que contengan la palabra 'word'
     // suggest indica si se desea generar las sugerencias de la palabra
     // multiplier es el multiplicador a aplicarle al parcial
@@ -77,6 +79,37 @@ public static class SearchEngine {
             }
 
         return items;
+    }
+
+    // Devuelve una lista ordenada con documentos a mostrar
+    public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, ParsedInput parsedInput, int amount) {
+
+        List<PartialItem> filtered = FilterByOperators(data, partials, parsedInput);
+
+        // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
+        Dictionary<int, CumulativeScore> relevances = new Dictionary<int, CumulativeScore> ();
+
+        // Iterando por los resultados parciales analizados
+        foreach (var partial in filtered) {
+            
+            Dictionary<int, Occurrences> info = data.Words[partial.Word];
+            // Si no se ha analizado el documento, se creara su clave
+            if (!(relevances.ContainsKey(partial.Document))) {
+                relevances.Add(partial.Document, new CumulativeScore());
+            }
+            relevances[partial.Document].AddWord(info[partial.Document].Relevance, partial);
+        }
+
+        // Ordena los documentos por su relevancia total
+        var sortedRelevances = relevances.OrderByDescending(x => x.Value.TotalScore).ToList();
+
+        List<CumulativeScore> results = new List<CumulativeScore>();
+
+        for (int i = 0; i < sortedRelevances.Count && i < amount; i++) {
+            results.Add(sortedRelevances[i].Value);
+        }
+
+        return results;
     }
 
     // Genera la lista de resultados finales
@@ -137,36 +170,9 @@ public static class SearchEngine {
         return new SearchResult(items.ToArray(), suggestions);
     }
 
-    // Devuelve una lista ordenada con documentos a mostrar
-    public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, ParsedInput parsedInput, int amount) {
+    #endregion
 
-        List<PartialItem> filtered = FilterByOperators(data, partials, parsedInput);
-
-        // Cada documento apuntara al score acumulativo de las palabras que contiene y tambien a las palabras en si
-        Dictionary<int, CumulativeScore> relevances = new Dictionary<int, CumulativeScore> ();
-
-        // Iterando por los resultados parciales analizados
-        foreach (var partial in filtered) {
-            
-            Dictionary<int, Occurrences> info = data.Words[partial.Word];
-            // Si no se ha analizado el documento, se creara su clave
-            if (!(relevances.ContainsKey(partial.Document))) {
-                relevances.Add(partial.Document, new CumulativeScore());
-            }
-            relevances[partial.Document].AddWord(info[partial.Document].Relevance, partial);
-        }
-
-        // Ordena los documentos por su relevancia total
-        var sortedRelevances = relevances.OrderByDescending(x => x.Value.TotalScore).ToList();
-
-        List<CumulativeScore> results = new List<CumulativeScore>();
-
-        for (int i = 0; i < sortedRelevances.Count && i < amount; i++) {
-            results.Add(sortedRelevances[i].Value);
-        }
-
-        return results;
-    }
+    #region Metodos privados
 
     // Recibe una lista de parciales y los filtra segun los operadores dados por el usuario
     static List<PartialItem> FilterByOperators(IndexData data, List<PartialItem> partials, ParsedInput parsedInput) {
@@ -530,4 +536,6 @@ public static class SearchEngine {
         }
         else return "@null";
     }
+
+    #endregion
 }
