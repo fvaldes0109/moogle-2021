@@ -3,9 +3,11 @@ using System.Text.RegularExpressions;
 
 namespace MoogleEngine;
 
-public static class StringParser { // Clase para el manejo y formateo de strings
+// Clase para el manejo y formateo de strings
+public static class StringParser {
 
-    public static char IsAlphaNum(char car) { // Revisa si es un caracter alfanumerico valido
+    // Revisa si es un caracter alfanumerico valido
+    public static char IsAlphaNum(char car) {
         string c = car.ToString().ToLower();
         if (char.IsLetterOrDigit(c[0])) {
             return c[0];
@@ -13,6 +15,7 @@ public static class StringParser { // Clase para el manejo y formateo de strings
         return '\0';
     }
 
+    // Transforma las vocales con acentos en la vocal plana
     public static string ParseAccents(string word) {
 
         StringBuilder result = new StringBuilder();
@@ -56,7 +59,8 @@ public static class StringParser { // Clase para el manejo y formateo de strings
         return result.ToString();
     }
 
-    public static ParsedInput InputParser(string input) { // Devuelve la lista de palabras de la entrada
+    // Devuelve la lista de palabras de la entrada
+    public static ParsedInput InputParser(string input) {
         
         ParsedInput result = new ParsedInput();
 
@@ -91,6 +95,7 @@ public static class StringParser { // Clase para el manejo y formateo de strings
         return result;
     }
 
+    // Detecta si una palabra es vocal o no
     public static bool IsVowel(char c) {
         return Regex.IsMatch(c.ToString(), "[aeiouáéíóúü]");
     }

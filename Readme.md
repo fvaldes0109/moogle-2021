@@ -131,6 +131,14 @@ Hasta entonces! 🖖
 
 A partir de aquí irán los detalles que deben especificarse sobre mi trabajo en el proyecto
 
+### Instrucciones para los sinónimos
+
+En el archivo `Thesaurus.csv` dentro de `MoogleEngine` se almacenará la relación de cada palabra con sus sinónimos. La estructura debe ser la siguiente:  
+
+- La primera línea debe contener exactamente la frase `key,synonyms`, para representar los nombres de los campos.  
+- De ahi en adelante, contendrá: `palabra,sinonimo_a sinonimo_b sinonimo_c` o la cantidad de sinónimos que se deseen. La coma y los espacios deben respetarse.
+- Todas las palabras que aparezcan en una línea deben ser sinónimos entre sí.  
+
 ### Ramas
 
 En la rama `main` se encuentra el proyecto funcional. Las instrucciones de ejecución son las mismas que se especificaron [mas arriba](#ejecutando-el-proyecto). En `testing` se encuentran las herramientas necesarias para realizar ciertos tests. **No se deben mergear los cambios de `testing` en `main`**, esto causaria errores fatales en el funcionamiento de la aplicación.

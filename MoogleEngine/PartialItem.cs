@@ -1,6 +1,7 @@
 namespace MoogleEngine;
 
-public class PartialItem { // Representa los datos minimos de un resultado
+// Representa un resultado con datos minimalistas
+public class PartialItem {
 
     public PartialItem(string word, int document, float multiplier = 1.0f, string original = "") {
         this.Word = word;
@@ -9,13 +10,18 @@ public class PartialItem { // Representa los datos minimos de un resultado
         this.Original = original;
     }
 
+    // La palabra buscada
     public string Word { get; private set; }
 
-    public int Document { get; private set; } // Es el ID del documento
+    // Es el ID del documento
+    public int Document { get; private set; }
 
-    public float Multiplier { get; private set; } // Multiplicador de relevancia
+    // Multiplicador de relevancia
+    public float Multiplier { get; private set; } 
 
-    public string Original { get; private set; } // Palabra original buscada
+    // Palabra original buscada (en caso de que Word se haya generado por una sugerencia.
+    // Si no fue asi, Original estara vacia)
+    public string Original { get; private set; }
 
     // Incrementa el multiplicador de la palabra
     public void Multiply(float value) {
