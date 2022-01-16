@@ -6,6 +6,8 @@ build:
 dev:
 	dotnet watch run --project MoogleServer
 
+amount = 8 # DEFAULT VALUE
+
 .PHONY: test
 test:
 	dotnet run --project TesterEntry --amount $(amount)
