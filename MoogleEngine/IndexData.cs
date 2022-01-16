@@ -3,10 +3,11 @@ using System.Diagnostics;
 
 namespace MoogleEngine;
 
+// Clase para almacenar toda la data de los documentos en memoria
 public class IndexData {
 
     public IndexData() {
-
+        // Cronometro para saber el tiempo que lleva indexar todo
         Stopwatch crono = new Stopwatch();
         System.Console.WriteLine("Inicio...");
         crono.Start();
@@ -21,11 +22,11 @@ public class IndexData {
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
 
             StreamReader reader = new StreamReader(files[i]);
-            List<Tuple<string, int>> wordList = GetWords(reader); // Recibe el contenido crudo
+            List<Tuple<string, int>> wordList = GetWords(reader); // Separa todas las palabras del doc
             reader.Close();
             this.Docs.Add(i, files[i]); // Asignar un ID al documento
             
-            foreach (var word in wordList) {
+            foreach (var word in wordList) { // Procesa cada palabra del doc
 
                 // La palabra sin acentos
                 string parsedWord = StringParser.ParseAccents(word.Item1);
@@ -41,14 +42,17 @@ public class IndexData {
                     // if (!(this.Roots.ContainsKey(root))) {
                     //     this.Roots.Add(root, new List<string>());
                     // }
-                    // this.Roots[root].Add(parsedWord); // Le agrega la palabra original a esta raiz
+                    // // Le agrega la palabra original a esta raiz
+                    // this.Roots[root].Add(parsedWord); 
 
                     // GetSubwords(parsedWord);
                 }
-                if (!(this.Words[parsedWord].ContainsKey(i))) { // Inicializar las ocurrencias en un doc especifico
+                // Inicializar las ocurrencias en un doc especifico
+                if (!(this.Words[parsedWord].ContainsKey(i))) {
                     this.Words[parsedWord][i] = new Occurrences();
                 }
-                this.Words[parsedWord][i].Push(word.Item2); // Agrega una nueva ocurrencia de la palabra en el doc
+                // Agrega una nueva ocurrencia de la palabra en el doc
+                this.Words[parsedWord][i].Push(word.Item2); 
             }
         }
 
@@ -111,7 +115,9 @@ public class IndexData {
     // Metodo para insertar las subpalabras derivadas de la palabra dada
     void GetSubwords(string word) {
         
+        // Genera las derivadas de la palabra
         List<string> derivates = SubWords.GetDerivates(word);
+        // Recorre cada una y las va insertando
         foreach (string subword in derivates) {
             
             if (!(this.Variations.ContainsKey(subword))) {

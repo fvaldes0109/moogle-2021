@@ -71,7 +71,7 @@ public static class SubWords {
     // Funcion recursiva para la generacion de derivadas
     static void PushDerivates(string original, int pos = -1) {
         
-        // Breakers para dejar de generar (REVISAR)
+        // Breakers para dejar de generar
         if (pos == adding.Count) return;
         if (adding.Count > 0 && adding[adding.Count - 1].Length * 2 - 1 <= original.Length) return;
         if (adding.Count > 0 && adding[adding.Count - 1].Length + maxErrors <= original.Length) return;

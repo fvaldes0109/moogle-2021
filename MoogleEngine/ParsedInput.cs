@@ -1,5 +1,6 @@
 namespace MoogleEngine;
 
+// Clase encargada de procesar la query escrita por el usuario
 public class ParsedInput {
 
     public ParsedInput() {
@@ -68,7 +69,7 @@ public class ParsedInput {
         get {
             List<List<string>> result = new List<List<string>>();
 
-            bool inSequence = false;
+            bool inSequence = false; // Para saber si se esta en una secuencia de palabras entre '~'
             for (int i = 0; i < this.Words.Count; i++) {
 
                 if (this.Tildes[i]) {
