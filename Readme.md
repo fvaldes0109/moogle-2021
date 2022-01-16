@@ -141,7 +141,7 @@ En el archivo `Thesaurus.csv` dentro de `MoogleEngine` se almacenará la relaci�
 
 ### Ramas
 
-En la rama `main` se encuentra el proyecto funcional. Las instrucciones de ejecución son las mismas que se especificaron [mas arriba](#ejecutando-el-proyecto). En `testing` se encuentran las herramientas necesarias para realizar ciertos tests. **No se deben mergear los cambios de `testing` en `main`**, esto causaria errores fatales en el funcionamiento de la aplicación.
+En la rama `main` se encuentra el proyecto funcional. Las instrucciones de ejecución son las mismas que se especificaron [mas arriba](#ejecutando-el-proyecto). En `testing` se encuentran las herramientas necesarias para realizar ciertos tests. **No se deben mergear los cambios de `testing` en `main`**, esto causaria errores fatales en el funcionamiento de la aplicación. Tampoco se debe ejecutar el `MoogleServer` desde `testing`.
 
 #### Testeo
 
