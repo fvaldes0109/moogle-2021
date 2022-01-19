@@ -127,7 +127,7 @@ Ah, por otro lado, nuestros diseñadores siguen trabajando en mejorar la interfa
 
 Hasta entonces! 🖖  
 
-## Anexiones
+## Anexo
 
 A partir de aquí irán los detalles que deben especificarse sobre mi trabajo en el proyecto
 
