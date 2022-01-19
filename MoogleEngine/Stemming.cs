@@ -11,6 +11,7 @@ public static class Stemming {
                                               "oslos", "oslas" };
 
     // Previos a los pronombres
+    static string[] prePronounA = new string[] { "iéndo", "ándo", "ár", "ér", "ír" };
     static string[] prePronounB = new string[] { "iendo", "ando", "ar", "er", "ir", "an", "en", "e", "a" };
     static string[] prePronounC = new string[] { "yendo" };
 
@@ -18,9 +19,9 @@ public static class Stemming {
     static string[] standSuffA = new string[] { "anza", "anzas", "ico", "ica", "icos", "icas", "ismo",
     "ismos", "able", "ables", "ible", "ibles", "ista", "istas", "oso", "osa", "osos", "osas", "amiento",
     "amientos", "imiento", "imientos", "ero", "era", "eros", "eras" };
-    static string[] standSuffB = new string[] { "adora", "ador", "acion", "adoras", "adores", "aciones",
+    static string[] standSuffB = new string[] { "adora", "ador", "ación", "adoras", "adores", "aciones",
     "ante", "antes", "ancia", "ancias" };
-    static string[] standSuffC = new string[] { "logia", "logias" };
+    static string[] standSuffC = new string[] { "logía", "logías" };
     static string[] standSuffD = new string[] { "ucion", "uciones" };
     static string[] standSuffE = new string[] { "encia", "encias" };
     static string[] standSuffF = new string[] { "amente" };
@@ -34,22 +35,22 @@ public static class Stemming {
     static string[] standSuffK = new string[] { "ente" };
 
     // Sufijos verbales del paso 2
-    static string[] verbsY = new string[] { "ya", "ye", "yan", "yen", "yeron", "yendo", "yo", "yas",
-    "yes", "yais", "yamos" };
-    static string[] verbsB1 = new string[] { "en", "es", "eis", "emos", "emonos", "emosle", "emosles",
-    "emoslo", "emoslos", "emosla", "emoslas" };
-    static string[] verbsB2 = new string[] { "arian", "arias", "aran", "aras", "ariais", "aria", "areis",
-    "ariamos", "aremos", "ara", "are", "erian", "erias", "eran", "eras", "eriais", "eria", "ereis",
-    "eriamos", "eremos", "era", "ere", "irian", "irias", "irias", "iran", "iras", "iriais", "iria",
-    "ireis", "iriamos", "iremos", "ira", "ire", "aba", "ada", "ida", "ia", "ara", "iera", "ad", "ed",
-    "ase", "iese", "aste", "iste", "an", "aban", "ian", "ieran", "asen", "iesen", "aron", "ieron", "ado",
-    "ido", "ando", "iendo", "io", "ar", "er", "ir", "as", "abas", "adas", "idas", "ias", "aras", "ieras",
-    "ases", "ieses", "is", "ais", "abais", "iais", "arais", "ierais", "aseis", "ieseis", "asteis",
-    "isteis", "ados", "idos", "amos", "abamos", "iamos", "imos", "aramos", "ieramos", "iesemos", "asemos",
-    "an" };
+    static string[] verbsY = new string[] { "ya", "ye", "yan", "yen", "yeron", "yendo", "yo", "yó", 
+    "yas", "yes", "yais", "yáis", "yamos" };
+    static string[] verbsB1 = new string[] { "en", "es", "éis", "emos", "émonos", "émosle", "émosles",
+    "émoslo", "émoslos", "émosla", "émoslas" };
+    static string[] verbsB2 = new string[] { "arían", "arías", "arán", "arás", "aríais", "aría", "aréis",
+    "aríamos", "aremos", "ará", "aré", "erían", "erías", "erán", "erás", "eríais", "ería", "eréis",
+    "eríamos", "eremos", "erá", "eré", "irían", "irías", "irías", "irán", "irás", "iríais", "iría",
+    "iréis", "iríamos", "iremos", "irá", "iré", "aba", "ada", "ida", "ía", "ara", "are", "iera", "ad",
+    "ed", "id", "ase", "iese", "aste", "iste", "an", "aban", "ían", "aran", "ieran", "asen", "iesen",
+    "aron", "ieron", "ado", "ido", "ando", "iendo", "ió", "ar", "er", "ir", "as", "abas", "adas", "idas",
+    "ías", "aras", "ares", "ieras", "ases", "ieses", "ís", "áis", "abais", "íais", "arais", "ierais",
+    "aseis", "ieseis", "asteis", "isteis", "ados", "idos", "amos", "ábamos", "íamos", "imos", "áramos",
+    "áremos", "iéramos", "iésemos", "ásemos", "an", "án" };
 
     // Sufijos residuales del paso 3
-    static string[] residual = new string[] { "os", "a", "o", "i" };
+    static string[] residual = new string[] { "os", "a", "o", "í", "ó", "á" };
 
     // Metodo para obtener la verdadera raiz de la palabra
     // Algoritmo: http://snowball.tartarus.org/algorithms/spanish/stemmer.html
@@ -96,17 +97,20 @@ public static class Stemming {
         string tillSuffix = word.Substring(0, word.Length - suffix.Length);
 
         string prevPron = "";
+        string prevA = LongestSuffix(tillSuffix, prePronounA);
         string prevB = LongestSuffix(tillSuffix, prePronounB);
         string prevC = LongestSuffix(tillSuffix, prePronounC);
 
         if (result.Length - suffix.Length >= R1) {
-            if (prevB != "") prevPron = prevB;
+            if (prevA != "") prevPron = prevA;
+            else if (prevB != "") prevPron = prevB;
             else if (prevC != "" && tillSuffix.Length - prevC.Length >= 1 && tillSuffix[tillSuffix.Length - prevC.Length - 1] == 'u') {
                 prevPron = prevC;
             }
 
             if (prevPron != "" && tillSuffix != "") {
                 result = tillSuffix;
+                if (prevA != "") result = StringParser.ParseAccents(result);
             }
         }
 
@@ -234,7 +238,7 @@ public static class Stemming {
         if (resSuf != "" && result.Length - resSuf.Length >= RV) {
             result = result.Substring(0, result.Length - resSuf.Length);
         }
-        else if (result.EndsWith('e') && result.Length - 1 >= RV) {
+        else if ((result.EndsWith('e') || result.EndsWith('é')) && result.Length - 1 >= RV) {
             result = result.Substring(0, result.Length - 1);
             if (result.EndsWith("gu") && result.Length - 1 >= RV) {
                 result = result.Substring(0, result.Length - 1);
@@ -243,7 +247,7 @@ public static class Stemming {
 
         #endregion
 
-        return result;
+        return StringParser.ParseAccents(result);
     }
 
     // Dada una palabra y una lista de sufijos, devuelve el mayor sufijo

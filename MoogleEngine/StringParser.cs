@@ -24,33 +24,18 @@ public static class StringParser {
             char temp = c;
             switch (temp) {
                 case 'á':
-                case 'ä':
-                case 'à':
-                case 'â':
                     temp = 'a';
                     break;
                 case 'é':
-                case 'ë':
-                case 'è':
-                case 'ê':
                     temp = 'e';
                     break;
                 case 'í':
-                case 'ï':
-                case 'ì':
-                case 'î':
                     temp = 'i';
                     break;
                 case 'ó':
-                case 'ö':
-                case 'ò':
-                case 'ô':
                     temp = 'o';
                     break;
                 case 'ú':
-                case 'ü':
-                case 'ù':
-                case 'û':
                     temp = 'u';
                     break;
             }
@@ -81,13 +66,13 @@ public static class StringParser {
             }
             else {
                 if (word.Length > 0) { // Si no, termina la palabra y la agrega a la lista
-                    result.Words.Add(ParseAccents(word.ToString()));
+                    result.Words.Add(word.ToString());
                     word.Clear();
                 }
             }
         }
         if (word.Length != 0) { // Guardando la ultima palabra
-            result.Words.Add(ParseAccents(word.ToString()));
+            result.Words.Add(word.ToString());
         }
         
         result.TrimEnd(); // Eliminando los posibles operadores sobrantes al final y ajustando tamaños

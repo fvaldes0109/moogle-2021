@@ -28,31 +28,31 @@ public class IndexData {
             
             foreach (var word in wordList) { // Procesa cada palabra del doc
 
-                // La palabra sin acentos
-                string parsedWord = StringParser.ParseAccents(word.Item1);
-
                 // Inicializar el diccionario al que apunta cada palabra y obtener su raiz
-                if (!(this.Words.ContainsKey(parsedWord))) {
+                if (!(this.Words.ContainsKey(word.Item1))) {
 
-                    this.Words.Add(parsedWord, new Dictionary<int, Occurrences>());
+                    this.Words.Add(word.Item1, new Dictionary<int, Occurrences>());
 
                     // Generacion de la raiz
-                    string root = Stemming.GetRoot(parsedWord);
-                    // Si no se ha usado esta raiz, inicializar su lista
-                    if (!(this.Roots.ContainsKey(root))) {
-                        this.Roots.Add(root, new List<string>());
+                    string root = Stemming.GetRoot(word.Item1);
+                    // Si la raiz es diferente a la palabra original, agregarla
+                    if (root != StringParser.ParseAccents(word.Item1)) {
+                        // Si no se ha usado esta raiz, inicializar su lista
+                        if (!(this.Roots.ContainsKey(root))) {
+                            this.Roots.Add(root, new List<string>());
+                        }
+                        // Le agrega la palabra original a esta raiz
+                        this.Roots[root].Add(word.Item1); 
                     }
-                    // Le agrega la palabra original a esta raiz
-                    this.Roots[root].Add(parsedWord); 
 
-                    GetSubwords(parsedWord);
+                    GetSubwords(word.Item1);
                 }
                 // Inicializar las ocurrencias en un doc especifico
-                if (!(this.Words[parsedWord].ContainsKey(i))) {
-                    this.Words[parsedWord][i] = new Occurrences();
+                if (!(this.Words[word.Item1].ContainsKey(i))) {
+                    this.Words[word.Item1][i] = new Occurrences();
                 }
                 // Agrega una nueva ocurrencia de la palabra en el doc
-                this.Words[parsedWord][i].Push(word.Item2); 
+                this.Words[word.Item1][i].Push(word.Item2); 
             }
         }
 
