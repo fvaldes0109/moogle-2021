@@ -283,6 +283,7 @@ public static class SearchEngine {
         // Aqui van todas las derivadas de 'word'
         List<string> derivates = SubWords.GetDerivates(word);
         // Aqui se acumulara el score total de cada sugerencia para determinar la mejor
+        // Dicho score tendra en cuenta el parecido con la palabra original usando Esit Distance
         Dictionary<string, float> cumulativeWord = new Dictionary<string, float>();
         
         // Buscando entre cada derivada
@@ -354,7 +355,7 @@ public static class SearchEngine {
         return results;
     }
 
-    // Genera las mejores sugerencias para una palabra. Devuelve la palabra y el multiplicador
+    // Genera los sinonimos de una palabra y devuelve los parciales con los resultados de estos
     static List<PartialItem> GetSynonyms(IndexData data, string word) {
         
         // Obteniendo la raiz de la palabra
@@ -392,7 +393,7 @@ public static class SearchEngine {
         return result;
     }
 
-    // Dado un conjunto de posiciones y sus palabras, obtiene el snippet con mas palabras
+    // Dado un conjunto de posiciones y sus palabras, obtiene el snippet con mas palabras distintas
     static string GetSnippet(string docPath, WordPositions positionsStore, bool hasRelevant) {
 
         int maxPoints = 1; // El maximo de palabras en una vecindad
@@ -450,7 +451,7 @@ public static class SearchEngine {
 
     // Busca y elimina caracteres invalidos en los bordes del snippet
     // Pueden existir debido a que se esta trabajando con las posiciones en bytes del documento
-    // Si un caracter especial es picado, quedara un caracter invalido
+    // Si un caracter especial es picado, quedara un caracter invalido, por lo que hay que corregirlo
     // Ya de paso se eliminarian signos de puntuacion, dejando solo un alfanumerico en el borde
     static string TrimSnippet(StringBuilder cad) {
 
