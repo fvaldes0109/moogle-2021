@@ -140,6 +140,7 @@ public static class SearchEngine {
             }
             // Almacena todas las posiciones que tengan palabras buscadas para generar el snippet
             WordPositions positionsStore = new WordPositions();
+            List<PartialItem> wordsToHighlight = new List<PartialItem>();
 
             // Revisando entre todas las palabras que aparecen en el documento
             foreach (var partial in docsData[i].Content) {
@@ -150,6 +151,7 @@ public static class SearchEngine {
                 // Como el documento paso el if anterior esta garantizado que contiene
                 // al menos una palabra relevante
                 if (occurrences.Relevance < minScore && hasRelevant) continue;
+                wordsToHighlight.Add(partial);
 
                 // Si la palabra se obtuvo de una sugerencia
                 if (partial.Original != "") {
@@ -159,7 +161,9 @@ public static class SearchEngine {
                 // Guardando las ocurrencias de la palabra en el doc
                 positionsStore.Insert(partial.Word, occurrences.StartPos.ToArray());
             }
+            // Obteniendo el snippet y resaltando las palabras
             string snippet = GetSnippet(docPath, positionsStore, hasRelevant);
+            snippet = HighlightWords(snippet, wordsToHighlight, hasRelevant);
 
             // Creando el SearchItem correspondiente a este doc
             items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore, docPath));
@@ -536,6 +540,29 @@ public static class SearchEngine {
             return ArrayOperations.WordsToString(originalWords);
         }
         else return "@null";
+    }
+
+    // Resalta las palabras de la busqueda en el snippet a mostrar al usuario
+    static string HighlightWords(string text, List<PartialItem> partials, bool hasRelevant) {
+
+        StringBuilder result = new StringBuilder(text);
+
+        foreach (var item in partials) {
+
+            // Tomando cada palabra            
+            string word = item.Word;
+            int[] positions = ArrayOperations.Substrings(result.ToString(), word);
+            // Cantidad de ediciones realizadas, para saber en cuanto desplazar las posiciones
+            int editions = 0;
+            // Iterando por cada posicion
+            foreach (var pos in positions) {
+
+                result.Insert(pos + editions * 7 + word.Length, "</b>");
+                result.Insert(pos + editions * 7, "<b>");
+                editions++;
+            }
+        }
+        return result.ToString();
     }
 
     #endregion

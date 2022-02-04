@@ -22,13 +22,26 @@ else {
     <div class="result-area @GetVisibility()">
             <ul class="results">
             @foreach (var item in result.Items()) {
+                SetStart(0);
                 <li @onclick="() => { ShowDocument(item.Title, item.Path); }">
                     <div class="item">
                         <div class="item-head">
                             <span class="title">@item.Title</span>
                             <span class="score">@item.Score</span>
                         </div>
-                        <p class="snippet">... @item.Snippet ...</p>
+                        <p class="snippet">... 
+                            @for (int i = 0; i < item.Snippet.Length - 3; i++) {
+                                @if (item.Snippet[i..(i + 3)] == "<b>") {
+                                    @item.Snippet[lastStart..i]
+                                    SetStart(i + 3);
+                                }
+                                @if (item.Snippet[i..(i + 4)] == "</b>") {
+                                    <b>@item.Snippet[lastStart..i]</b>
+                                    SetStart(i + 4);
+                                }
+                            }
+                            @item.Snippet[lastStart..item.Snippet.Length]
+                         ...</p>
                     </div>
                 </li>
             <hr>
@@ -43,11 +56,16 @@ else {
 }
 
 @code {
+    private int lastStart = 0;
     private string query = "";
     private string displayedTitle = "";
 
     private string displayedContent = "";
     private SearchResult result = new SearchResult();
+
+    private void SetStart(int pos) {
+        lastStart = pos;
+    }
 
     private void RunQuery() {
         displayedTitle = "";

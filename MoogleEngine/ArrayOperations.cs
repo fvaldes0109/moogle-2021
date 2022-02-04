@@ -32,4 +32,35 @@ public static class ArrayOperations {
         Array.Reverse(charArray);
         return new string(charArray);
     }
+
+    // Devuelve un array con las posiciones donde aparece la subcadena enviada
+    public static int[] Substrings(string cad, string substr) {
+
+        StringBuilder dynamic = new StringBuilder(cad);
+        List<int> positions = new List<int>();
+
+        bool found = false;
+        do {
+            // Si existe el substring dentro de la cadena
+            if (dynamic.ToString().Contains(substr, StringComparison.OrdinalIgnoreCase)) {
+                // Agregar su posicion a la lista
+                int pos = dynamic.ToString().IndexOf(substr, StringComparison.OrdinalIgnoreCase);
+                // Si lo encontrado fue una palabra, agregarla a la lista de posiciones
+                // Revisando que no hayan otras letras a la izquierda
+                if (pos == 0 || !char.IsLetterOrDigit(dynamic[pos - 1])) {
+                    // Revisando que no hayan otras letras a la derecha
+                    if (pos + substr.Length == cad.Length || ( pos + substr.Length < cad.Length && !char.IsLetterOrDigit(dynamic[pos + substr.Length]))) {
+                        positions.Add(pos);
+                    }
+                }
+                // Reemplaar el caracter para que no vuelva a aparecer en el resultado
+                dynamic[pos] = '*';
+                found = true;
+            }
+            else {
+                found = false;
+            }
+        } while (found);
+        return positions.ToArray();
+    }
 }
