@@ -10,7 +10,7 @@
 
 @if (!string.IsNullOrEmpty(result.Suggestion) && result.Suggestion != "@null") {
     <div class="suggestion">
-        <p>¿Quisiste decir <strong><a href="#">@result.Suggestion</a></strong>?</p>
+        <p>¿Quisiste decir <strong><a href="#" @onclick="SearchSuggestion">@result.Suggestion</a></strong>?</p>
     </div>
 }
 
@@ -19,24 +19,60 @@
     <img alt="no-result" src="./no-result.jpg" width="250">
 }
 else {
-    <ul class="results">
-    @foreach (var item in result.Items()) {
-        <li>
-            <div class="item">
-                <p class="title">@item.Title</p>
-                <p>@item.Score</p>
-                <p>... @item.Snippet ...</p>
-            </div>
-        </li>
-    }
-    </ul>
+    <div class="result-area @GetVisibility()">
+            <ul class="results">
+            @foreach (var item in result.Items()) {
+                <li @onclick="() => {ShowDocument(item.Title);}">
+                    <div class="item">
+                        <div class="item-head">
+                            <span class="title">@item.Title</span>
+                            <span class="score">@item.Score</span>
+                        </div>
+                        <p class="snippet">... @item.Snippet ...</p>
+                    </div>
+                </li>
+            <hr>
+            }
+            </ul>
+
+        <div class="doc-content">
+            <h2>@displayedTitle</h2>
+            <p class="doc-text">@displayedContent</p>
+        </div>
+    </div>
 }
 
 @code {
     private string query = "";
+    private string displayedTitle = "";
+
+    private string displayedContent = "";
     private SearchResult result = new SearchResult();
 
     private void RunQuery() {
+        displayedTitle = "";
+        displayedContent = "";
         result = Moogle.Query(query);
+
+        if (result.Count == 0) {
+            areResults = false;
+        }
+        else {
+            areResults = true;
+        }
+    }
+
+    private void SearchSuggestion() {
+        query = @result.Suggestion;
+        RunQuery();
+    }
+
+    private string GetVisibility() {
+        return (result.Count == 0 ? "invisible" : "flexb");
+    }
+
+    private void ShowDocument(string title) {
+        displayedTitle = title;
+        displayedContent = "Aqui va el contenido del documento";
     }
 }
