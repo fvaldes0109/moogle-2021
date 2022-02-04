@@ -2,6 +2,11 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: linear-gradient(120deg, white, lightblue);
+}
+
+body {
+    min-height: 100vh;
 }
 
 h1:focus {
@@ -74,7 +79,6 @@ a, .btn-link {
 
 .result-area {
     display: flex;
-    background: linear-gradient(white, lightblue);
 }
 
 .results {
@@ -114,4 +118,16 @@ li:hover {
 
 .snippet {
     text-align: left;
+}
+
+.doc-text {
+    white-space: pre-line;
+    text-align: left;
+    overflow-y: scroll;
+    height: 2500px;
+    margin: 10px;
+    padding: 15px;
+    border: 1px solid rgb(195, 195, 228);
+    border-right: 0;
+    box-shadow: inset 5px 5px 5px rgba(187, 187, 214, 0.5);
 }

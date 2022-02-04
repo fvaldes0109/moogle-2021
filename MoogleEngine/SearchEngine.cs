@@ -8,10 +8,10 @@ public static class SearchEngine {
     static float minScore = 0.0001f; 
 
     // La cantidad de caracteres que tendra el snippet
-    static int snippetWidth = 150; 
+    static int snippetWidth = 600; 
 
     // Las longitudes de los rangos para el operador ~
-    static int[] closerDiameter = new int[] { 20, 50, 100, 150 };
+    static int[] closerDiameter = new int[] { 50, 100, 150, 300, 600 };
 
     // La cantidad minima de documentos que debe generar una palabra para no procesar sus sugerencias
     static int minAcceptable = 3;
@@ -162,7 +162,7 @@ public static class SearchEngine {
             string snippet = GetSnippet(docPath, positionsStore, hasRelevant);
 
             // Creando el SearchItem correspondiente a este doc
-            items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore));
+            items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore, docPath));
         }
         
         string suggestions = GenerateSuggestionString(originalWords, suggestedWords.ToArray());

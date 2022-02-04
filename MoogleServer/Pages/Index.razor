@@ -22,7 +22,7 @@ else {
     <div class="result-area @GetVisibility()">
             <ul class="results">
             @foreach (var item in result.Items()) {
-                <li @onclick="() => {ShowDocument(item.Title);}">
+                <li @onclick="() => { ShowDocument(item.Title, item.Path); }">
                     <div class="item">
                         <div class="item-head">
                             <span class="title">@item.Title</span>
@@ -53,13 +53,6 @@ else {
         displayedTitle = "";
         displayedContent = "";
         result = Moogle.Query(query);
-
-        if (result.Count == 0) {
-            areResults = false;
-        }
-        else {
-            areResults = true;
-        }
     }
 
     private void SearchSuggestion() {
@@ -71,8 +64,10 @@ else {
         return (result.Count == 0 ? "invisible" : "flexb");
     }
 
-    private void ShowDocument(string title) {
+    private void ShowDocument(string title, string path) {
         displayedTitle = title;
-        displayedContent = "Aqui va el contenido del documento";
+
+        StreamReader reader = new StreamReader(path);
+        displayedContent = reader.ReadToEnd();
     }
 }
