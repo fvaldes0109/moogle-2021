@@ -48,7 +48,7 @@ public static class Moogle
             // Cruza los resultados de las palabras separadas y obtiene los doc mas relevantes
             List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials, parsedInput, finalResults);
             // Genera los resultados finales
-            result = SearchEngine.GetResults(data, partialResults, words);
+            result = SearchEngine.GetResults(data, partialResults, parsedInput);
         }
 
         return result;

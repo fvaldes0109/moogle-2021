@@ -14,12 +14,22 @@ public static class ArrayOperations {
     }
 
     // Convierte un arreglo de string (palabras) a un string representando una frase
-    public static string WordsToString(string[] array) {
+    public static string WordsToString(string[] array, ParsedInput input) {
 
         StringBuilder result = new StringBuilder();
+
+        int i = 0;
+        // Agregando los operadores y la palabra en su posicion
         foreach (string word in array) {
+
+            if (input.Operators[i] != "") result.Append(input.Operators[i]);
+
             result.Append(word);
             result.Append(' ');
+
+            if (input.Tildes[i]) result.Append("~ ");
+
+            i++;
         }
         result.Remove(result.Length - 1, 1);
         return result.ToString();

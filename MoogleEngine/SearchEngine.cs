@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace MoogleEngine;
 
 public static class SearchEngine {
@@ -110,7 +108,7 @@ public static class SearchEngine {
     }
 
     // Genera la lista de resultados finales
-    public static SearchResult GetResults(IndexData data, List<CumulativeScore> docsData, string[] originalWords) {
+    public static SearchResult GetResults(IndexData data, List<CumulativeScore> docsData, ParsedInput input) {
 
         // Aqui va la lista de resultados
         List<SearchItem> items = new List<SearchItem>();
@@ -166,7 +164,7 @@ public static class SearchEngine {
             items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore, docPath));
         }
         
-        string suggestions = GenerateSuggestionString(originalWords, suggestedWords.ToArray());
+        string suggestions = GenerateSuggestionString(input, suggestedWords.ToArray());
 
         return new SearchResult(items.ToArray(), suggestions);
     }
@@ -248,8 +246,10 @@ public static class SearchEngine {
                             wordPositions.Insert(word, data.Words[word][Id].StartPos.ToArray());
                         }
                     }
+                    // Si el doc solo contiene una palabra del grupo, ahorrarse la busqueda
+                    if (wordPositions.Differents.Count <= 1) continue;
 
-                    bool achievedBest = false;
+                    bool achievedBest = false; // Para saber si ya se encontro el mejor rango posible
                     // Analizando cada diametro
                     for (int i = 0; i < closerDiameter.Length && !achievedBest; i++) {
                         // Analizando cada posicion con ese diametro
@@ -258,7 +258,7 @@ public static class SearchEngine {
                             int amount = SnippetOperations.GetZone(pos, wordPositions, closerDiameter[i]);
                             maxMult = Math.Max(maxMult, (amount - 1) * (closerDiameter.Length - i + 1));
                             // Si se hallo un intervalo con todas las palabras, no existe uno mejor
-                            if (amount == wordSet.Count) {
+                            if (amount == wordPositions.Differents.Count) {
                                 achievedBest = true;
                                 break;
                             }
@@ -395,8 +395,9 @@ public static class SearchEngine {
     }
 
     // Dada la cadena original y los parciales de las sugerencias, genera el string de sugerencias
-    static string GenerateSuggestionString(string[] originalWords, PartialItem[] partials) {
-
+    static string GenerateSuggestionString(ParsedInput input, PartialItem[] partials) {
+        
+        string[] originalWords = input.Words.ToArray();
         // Para cada palabra original, almacena su mejor sugerencia
         Dictionary<string, Tuple<string, float>> bestSuggestions = new Dictionary<string, Tuple<string, float>>();
 
@@ -425,7 +426,7 @@ public static class SearchEngine {
                 int pos = ArrayOperations.Find(originalWords, replace.Key);
                 originalWords[pos] = replace.Value.Item1;
             }
-            return ArrayOperations.WordsToString(originalWords);
+            return ArrayOperations.WordsToString(originalWords, input);
         }
         else return "@null";
     }
