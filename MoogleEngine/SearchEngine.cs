@@ -34,7 +34,7 @@ public static class SearchEngine {
         // Generando las sugerencias si la palabra no existe
         if (!(data.Words.ContainsKey(word))) {
             
-            List<Tuple<string, float>> suggestions = GetSuggestions(data, word);
+            List<(string, float)> suggestions = GetSuggestions(data, word);
             // Si existen sugerencias
             if (suggest && suggestions.Count > 0) {
                 // Hallar los parciales de cada una
@@ -63,7 +63,7 @@ public static class SearchEngine {
         // Si hay muy pocos resultados, generar sugerencias
             if (suggest && PartialItem.CountDocuments(items) < minAcceptable) {
                 
-                List<Tuple<string, float>> suggestions = GetSuggestions(data, word);
+                List<(string, float)> suggestions = GetSuggestions(data, word);
                 if (suggestions.Count > 0) {
                     foreach (var suggestion in suggestions) {
                         items.AddRange(GetOneWord(data, suggestion.Item1, false, suggestion.Item2, word, true));
@@ -178,7 +178,7 @@ public static class SearchEngine {
 
         string[] mandatoryWords = parsedInput.MandatoryWords; // Las palabras con operador ^
         string[] forbiddenWords = parsedInput.ForbiddenWords; // Las palabras con operador !
-        Tuple<string, int>[] multipliedWords = parsedInput.MultipliedWords; // Las palabras con operador *
+        (string, int)[] multipliedWords = parsedInput.MultipliedWords; // Las palabras con operador *
         List<string>[] closerWords = parsedInput.CloserWords; // Las palabras entre operadores ~
 
         List<PartialItem> result = new List<PartialItem>();
@@ -279,7 +279,7 @@ public static class SearchEngine {
     }
 
     // Genera las mejores sugerencias para una palabra. Devuelve la palabra y el multiplicador
-    static List<Tuple<string, float>> GetSuggestions(IndexData data, string word) {
+    static List<(string, float)> GetSuggestions(IndexData data, string word) {
 
         // Aqui van todas las derivadas de 'word'
         List<string> derivates = SubWords.GetDerivates(word);
@@ -310,7 +310,7 @@ public static class SearchEngine {
         // Ordenando las sugerencias por su parecido a la palabra
         var suggestions = cumulativeWord.OrderByDescending(x => x.Value).ToList();
         // Aqui iran las sugerencias resultantes
-        List<Tuple<string, float>> result = new List<Tuple<string, float>>();
+        List<(string, float)> result = new List<(string, float)>();
 
         int i = 0; // Para contar cuantas sugerencias se enviaran
         foreach (var suggestion in suggestions) {
@@ -319,7 +319,7 @@ public static class SearchEngine {
 
             string finalWord = suggestion.Key;
             float finalMult = 1.0f / SubWords.Distance(finalWord, word);
-            result.Add(new Tuple<string, float>(finalWord, finalMult));
+            result.Add((finalWord, finalMult));
 
             i++;
         }
@@ -399,7 +399,7 @@ public static class SearchEngine {
         
         string[] originalWords = input.Words.ToArray();
         // Para cada palabra original, almacena su mejor sugerencia
-        Dictionary<string, Tuple<string, float>> bestSuggestions = new Dictionary<string, Tuple<string, float>>();
+        Dictionary<string, (string, float)> bestSuggestions = new Dictionary<string, (string, float)>();
 
         foreach (var partial in partials) {
 
@@ -411,11 +411,11 @@ public static class SearchEngine {
                 float distance = SubWords.Distance(originalWords[pos], partial.Word);
                 // Si aun no se han analizado sugerencias para la palabra, se agrega
                 if (!(bestSuggestions.ContainsKey(originalWords[pos]))) {
-                    bestSuggestions[originalWords[pos]] = new Tuple<string, float>(partial.Word, distance);
+                    bestSuggestions[originalWords[pos]] = (partial.Word, distance);
                 }
                 // Si la palabra ya tiene una sugerencia, comprobar si la que tenemos es mejor
                 else if(bestSuggestions[originalWords[pos]].Item2 > distance) {
-                    bestSuggestions[originalWords[pos]] = new Tuple<string, float>(partial.Word, distance);
+                    bestSuggestions[originalWords[pos]] = (partial.Word, distance);
                 }
             }
         }

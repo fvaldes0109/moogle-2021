@@ -22,7 +22,7 @@ public class IndexData {
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
 
             StreamReader reader = new StreamReader(files[i]);
-            List<Tuple<string, int>> wordList = GetWords(reader); // Separa todas las palabras del doc
+            List<(string, int)> wordList = GetWords(reader); // Separa todas las palabras del doc
             reader.Close();
             this.Docs.Add(i, files[i]); // Asignar un ID al documento
             
@@ -79,8 +79,8 @@ public class IndexData {
     public Dictionary<string, List<string>> Synonyms { get; private set; }
 
     // Devuelve la lista de las palabras existentes y su ubicacion
-    List<Tuple<string, int>> GetWords(StreamReader reader) {
-        List<Tuple<string, int>> result = new List<Tuple<string, int>> (); // <palabra, posicionDeInicio>
+    List<(string, int)> GetWords(StreamReader reader) {
+        List<(string, int)> result = new List<(string, int)> (); // <palabra, posicionDeInicio>
 
         // Aqui se ira almacenando cada palabra
         StringBuilder temp = new StringBuilder();
@@ -95,7 +95,7 @@ public class IndexData {
             }
             else { // Si no, agrega la palabra formada a la lista y continua a la siguiente
                 if (temp.Length > 0) { // Para controlar el caso de dos caracteres no alfanumericos juntos
-                    result.Add(new Tuple<string, int> (temp.ToString(), start));
+                    result.Add((temp.ToString(), start));
                 }
                 // Avanza la posicion inicial en la cantidad de bytes de la palabra que se agrego
                 // Mas cualquier caracter no alfanumerico que aparezca
@@ -106,7 +106,7 @@ public class IndexData {
 
         // Agregando la ultima palabra
         if (temp.Length != 0) {
-            result.Add(new Tuple<string, int> (temp.ToString(), start));
+            result.Add((temp.ToString(), start));
         }
 
         return result;
