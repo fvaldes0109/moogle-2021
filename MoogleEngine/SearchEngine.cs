@@ -246,6 +246,8 @@ public static class SearchEngine {
                     for (int i = 0; i < closerDiameter.Length && !achievedBest; i++) {
                         // Analizando cada posicion con ese diametro
                         foreach (int pos in wordPositions.Positions) {
+                            // Si la palabra actual es poco relevante, saltarsela
+                            if (data.Words[wordPositions.Words[pos]][partial.Document].Relevance < minScore) continue;
                             // Calculando los multiplicadores y guardando el maximo
                             int amount = SnippetOperations.GetZone(pos, wordPositions, closerDiameter[i]);
                             maxMult = Math.Max(maxMult, (amount - 1) * (closerDiameter.Length - i + 1));

@@ -7,7 +7,7 @@ public static class Moogle
 
     // Si al calcular el IDF la razon Frecuencia / TotalDocs da mayor que el valor, se tomara como 1
     // Esto anula el TF-IDF de las palabras que aparecen en casi todos los documentos
-    static float percentToNullify = 0.9f;
+    static float percentToNullify = 0.95f;
 
     // La 1ra vez que se acceda a esta clase, se indexaran todas las palabras
     static IndexData data = new IndexData();
