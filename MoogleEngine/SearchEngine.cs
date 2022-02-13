@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace MoogleEngine;
 
 public static class SearchEngine {
@@ -7,11 +5,8 @@ public static class SearchEngine {
     // El score minimo necesario para que un documento se muestre
     static float minScore = 0.0001f; 
 
-    // La cantidad de caracteres que tendra el snippet
-    static int snippetWidth = 150; 
-
     // Las longitudes de los rangos para el operador ~
-    static int[] closerDiameter = new int[] { 20, 50, 100, 150 };
+    static int[] closerDiameter = new int[] { 50, 100, 150, 300, 600 };
 
     // La cantidad minima de documentos que debe generar una palabra para no procesar sus sugerencias
     static int minAcceptable = 3;
@@ -20,7 +15,13 @@ public static class SearchEngine {
     static int suggestionsByWord = 3;
 
     // Si una sugerencia genera al menos estos resultados, no se agregaran mas sugerencias a la busqueda
-    static int resultsWithSuggestion = 5;
+    static int resultsWithSuggestion = 10;
+
+    // La mayor diferencia de longitudes permitida entre una palabra y su sugerencia
+    static int maxCharDiff = 3;
+
+    // La mayor distancia de Lev. permitida entre una palabra y su sugerencia
+    static int maxDistance = 5;
 
     #region Metodos publicos
 
@@ -36,21 +37,7 @@ public static class SearchEngine {
         // Para guardar los parciales de las mismas raices y sugerencias
         List<PartialItem> lowerResults = new List<PartialItem>();
 
-        // Generando las sugerencias si la palabra no existe
-        if (!(data.Words.ContainsKey(word))) {
-            
-            List<Tuple<string, float>> suggestions = GetSuggestions(data, word);
-            // Si existen sugerencias
-            if (suggest && suggestions.Count > 0) {
-                // Hallar los parciales de cada una
-                foreach (var suggestion in suggestions) {
-                    lowerResults.AddRange(GetOneWord(data, suggestion.Item1, false, suggestion.Item2, word, true));
-                    // Si se considera que se hayaron suficientes sugerencias, no agregar mas
-                    if (lowerResults.Count >= resultsWithSuggestion) break;
-                }
-            }
-        }
-        else {
+        if (data.Words.ContainsKey(word)) {
             Dictionary<int, Occurrences> info = data.Words[word];
             foreach (var doc in info) {
                 items.Add(new PartialItem(word, doc.Key, multiplier, original));
@@ -68,7 +55,7 @@ public static class SearchEngine {
         // Si hay muy pocos resultados, generar sugerencias
             if (suggest && PartialItem.CountDocuments(items) < minAcceptable) {
                 
-                List<Tuple<string, float>> suggestions = GetSuggestions(data, word);
+                List<(string, float)> suggestions = GetSuggestions(data, word);
                 if (suggestions.Count > 0) {
                     foreach (var suggestion in suggestions) {
                         items.AddRange(GetOneWord(data, suggestion.Item1, false, suggestion.Item2, word, true));
@@ -113,7 +100,7 @@ public static class SearchEngine {
     }
 
     // Genera la lista de resultados finales
-    public static SearchResult GetResults(IndexData data, List<CumulativeScore> docsData, string[] originalWords) {
+    public static SearchResult GetResults(IndexData data, List<CumulativeScore> docsData, ParsedInput input) {
 
         // Aqui va la lista de resultados
         List<SearchItem> items = new List<SearchItem>();
@@ -140,6 +127,7 @@ public static class SearchEngine {
             }
             // Almacena todas las posiciones que tengan palabras buscadas para generar el snippet
             WordPositions positionsStore = new WordPositions();
+            List<PartialItem> wordsToHighlight = new List<PartialItem>();
 
             // Revisando entre todas las palabras que aparecen en el documento
             foreach (var partial in docsData[i].Content) {
@@ -150,6 +138,7 @@ public static class SearchEngine {
                 // Como el documento paso el if anterior esta garantizado que contiene
                 // al menos una palabra relevante
                 if (occurrences.Relevance < minScore && hasRelevant) continue;
+                wordsToHighlight.Add(partial);
 
                 // Si la palabra se obtuvo de una sugerencia
                 if (partial.Original != "") {
@@ -159,13 +148,15 @@ public static class SearchEngine {
                 // Guardando las ocurrencias de la palabra en el doc
                 positionsStore.Insert(partial.Word, occurrences.StartPos.ToArray());
             }
-            string snippet = GetSnippet(docPath, positionsStore, hasRelevant);
+            // Obteniendo el snippet y resaltando las palabras
+            string snippet = SnippetOperations.GetSnippet(docPath, positionsStore, hasRelevant);
+            snippet = SnippetOperations.HighlightWords(snippet, wordsToHighlight, hasRelevant);
 
             // Creando el SearchItem correspondiente a este doc
-            items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore));
+            items.Add(new SearchItem(title, snippet.ToString(), docsData[i].TotalScore, docPath));
         }
         
-        string suggestions = GenerateSuggestionString(originalWords, suggestedWords.ToArray());
+        string suggestions = GenerateSuggestionString(input, suggestedWords.ToArray());
 
         return new SearchResult(items.ToArray(), suggestions);
     }
@@ -179,7 +170,7 @@ public static class SearchEngine {
 
         string[] mandatoryWords = parsedInput.MandatoryWords; // Las palabras con operador ^
         string[] forbiddenWords = parsedInput.ForbiddenWords; // Las palabras con operador !
-        Tuple<string, int>[] multipliedWords = parsedInput.MultipliedWords; // Las palabras con operador *
+        (string, int)[] multipliedWords = parsedInput.MultipliedWords; // Las palabras con operador *
         List<string>[] closerWords = parsedInput.CloserWords; // Las palabras entre operadores ~
 
         List<PartialItem> result = new List<PartialItem>();
@@ -247,17 +238,21 @@ public static class SearchEngine {
                             wordPositions.Insert(word, data.Words[word][Id].StartPos.ToArray());
                         }
                     }
+                    // Si el doc solo contiene una palabra del grupo, ahorrarse la busqueda
+                    if (wordPositions.Differents.Count <= 1) continue;
 
-                    bool achievedBest = false;
+                    bool achievedBest = false; // Para saber si ya se encontro el mejor rango posible
                     // Analizando cada diametro
                     for (int i = 0; i < closerDiameter.Length && !achievedBest; i++) {
                         // Analizando cada posicion con ese diametro
                         foreach (int pos in wordPositions.Positions) {
+                            // Si la palabra actual es poco relevante, saltarsela
+                            if (data.Words[wordPositions.Words[pos]][partial.Document].Relevance < minScore) continue;
                             // Calculando los multiplicadores y guardando el maximo
-                            int amount = GetZone(pos, wordPositions, closerDiameter[i]);
+                            int amount = SnippetOperations.GetZone(pos, wordPositions, closerDiameter[i]);
                             maxMult = Math.Max(maxMult, (amount - 1) * (closerDiameter.Length - i + 1));
                             // Si se hallo un intervalo con todas las palabras, no existe uno mejor
-                            if (amount == wordSet.Count) {
+                            if (amount == wordPositions.Differents.Count) {
                                 achievedBest = true;
                                 break;
                             }
@@ -278,51 +273,54 @@ public static class SearchEngine {
     }
 
     // Genera las mejores sugerencias para una palabra. Devuelve la palabra y el multiplicador
-    static List<Tuple<string, float>> GetSuggestions(IndexData data, string word) {
+    static List<(string, float)> GetSuggestions(IndexData data, string word) {
 
-        // Aqui van todas las derivadas de 'word'
-        List<string> derivates = SubWords.GetDerivates(word);
-        // Aqui se acumulara el score total de cada sugerencia para determinar la mejor
-        Dictionary<string, float> cumulativeWord = new Dictionary<string, float>();
-        
-        // Buscando entre cada derivada
-        foreach (string subword in derivates) {
-            if (data.Variations.ContainsKey(subword)) {
-                // Buscando entre cada posible origen de la derivada actual
-                foreach (string possibleOrigin in data.Variations[subword]) {
-                    // Verificando que no sugiera la palabra original
-                    if (word != possibleOrigin) {
-                        // Hallando la distancia entre la palabra escrita y la sugerencia
-                        float priority = 1.0f - SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length, possibleOrigin.Length);
-                        // Calculando los TF-IDF de la sugerencia en cada doc
-                        if (!(cumulativeWord.ContainsKey(possibleOrigin))) {
-                            cumulativeWord[possibleOrigin] = priority;
-                        }
-                        else {
-                            cumulativeWord[possibleOrigin] += priority;
-                        }
-                    }
-                }
+        // Aqui van las palabras de longitud cercana a la palabra
+        List<string> closeWords = new List<string>();
+        // Obtiene la posicion de una palabra de longitud igual a word.Length - 3
+        int lowLengthPos = GetLengthInDict(data, word.Length - maxCharDiff, 0, data.Words.Count);
+
+        // Aqui se acumulara el score de cada sugerencia para determinar la mejor
+        // Dicho score tendra en cuenta el parecido con la palabra original usando Edit Distance
+        List<(string, float)> suggestionsPriority = new List<(string, float)>();
+
+        if (lowLengthPos == int.MaxValue) return suggestionsPriority;
+
+        // Busca las palabras de longitud cercana a word
+        foreach (var dictWord in data.Words.Skip(lowLengthPos)) {
+            // Si se supera la longitud por mucho, no seguir buscando
+            if (dictWord.Key.Length - word.Length > maxCharDiff) break;
+            if (word != dictWord.Key) {
+                // Hallando la distancia entre la palabra escrita y la sugerencia
+                float distance = ArrayOperations.Distance(dictWord.Key, word);
+                if (distance > maxDistance) continue;
+                suggestionsPriority.Add((dictWord.Key, 1.0f / distance));
             }
         }
+
         // Ordenando las sugerencias por su parecido a la palabra
-        var suggestions = cumulativeWord.OrderByDescending(x => x.Value).ToList();
+        var suggestions = suggestionsPriority.OrderByDescending(x => x.Item2).ToList();
         // Aqui iran las sugerencias resultantes
-        List<Tuple<string, float>> result = new List<Tuple<string, float>>();
+        List<(string, float)> result = new List<(string, float)>();
 
-        int i = 0; // Para contar cuantas sugerencias se enviaran
-        foreach (var suggestion in suggestions) {
-            
-            if (i == suggestionsByWord) break;
-
-            string finalWord = suggestion.Key;
-            float finalMult = 1.0f / SubWords.Distance(finalWord, word);
-            result.Add(new Tuple<string, float>(finalWord, finalMult));
-
-            i++;
+        for (int i = 0; i < suggestionsByWord && i < suggestions.Count; i++) {
+            result.Add(suggestions[i]);
         }
-        // Ordenando y devolviendo las sugerencias finales
-        return result.OrderByDescending(x => x.Item2).ToList();
+
+        return result;
+    }
+    
+    // Busqueda binaria para hallar una palabra de cierta longitud en la data de palabras
+    static int GetLengthInDict(IndexData data, int length, int i, int j) {
+
+        if (i > j) return int.MaxValue;
+
+        int mid = (i + j) / 2;
+        int currentLength = data.Words.ElementAt(mid).Key.Length;
+
+        if (currentLength == length) return mid;
+        else if (currentLength > length) return GetLengthInDict(data, length, i, mid - 1);
+        else return GetLengthInDict(data, length, mid + 1, j);
     }
 
     // Para buscar los resultados de las palabras con la misma raiz
@@ -341,7 +339,7 @@ public static class SearchEngine {
             foreach (string possibleOrigin in data.Roots[root]) {
                 if (word != possibleOrigin) {
                     // Distancia entre la nueva palabra y la original
-                    float priority = 1.0f - SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
+                    float priority = 1.0f - ArrayOperations.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
                     // Buscando la nueva palabra en cada documento
                     List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, false, priority * 0.1f));
                     results.AddRange(newResults);
@@ -354,7 +352,7 @@ public static class SearchEngine {
         return results;
     }
 
-    // Genera las mejores sugerencias para una palabra. Devuelve la palabra y el multiplicador
+    // Genera los sinonimos de una palabra y devuelve los parciales con los resultados de estos
     static List<PartialItem> GetSynonyms(IndexData data, string word) {
         
         // Obteniendo la raiz de la palabra
@@ -392,120 +390,12 @@ public static class SearchEngine {
         return result;
     }
 
-    // Dado un conjunto de posiciones y sus palabras, obtiene el snippet con mas palabras
-    static string GetSnippet(string docPath, WordPositions positionsStore, bool hasRelevant) {
-
-        int maxPoints = 1; // El maximo de palabras en una vecindad
-        int pivot = positionsStore.Positions.ElementAt(0); // El pivote de la vecindad
-
-        // Si tiene palabras relevantes, selecciona el mejor snippet
-        // Si son solo palabras mongas, escoge el 1ro. Pues si no se demoraria demasiado
-        if (hasRelevant) {
-            // Recorriendo todas las posiciones con palabras
-            foreach (int pos in positionsStore.Positions) {
-
-                // Calculando la cantidad de puntos en la vecindad
-                int points = GetZone(pos, positionsStore, snippetWidth);
-
-                if (maxPoints < points) {
-                    maxPoints = points;
-                    pivot = pos;
-                }
-            }
-        }
-
-        StreamReader reader = new StreamReader(docPath);
-        int left, right; // Los limites de la vecindad
-
-        // El tamaño en bytes del documento
-        int docSize = (int)reader.BaseStream.Length;
-
-        // Calculando los limites
-        if (pivot - snippetWidth / 4 < 0) { // Si el punto esta muy al comienzo del doc
-            left = 0;
-            right = snippetWidth;
-        }
-        // Si esta muy al final
-        else if (pivot + snippetWidth - snippetWidth / 4 >= docSize) {
-            right = docSize;
-            left = docSize - snippetWidth;
-        }
-        else { // Si no esta cerca de los bordes
-            left = pivot - snippetWidth / 4;
-            right = pivot + snippetWidth - snippetWidth / 4;
-        }
-
-        // Colocando el puntero del stream al inicio del snippet
-        reader.BaseStream.Position = left;
-        
-        StringBuilder result = new StringBuilder();
-
-        for (int i = 0; i < snippetWidth; i++) {
-            result.Append((char)reader.Read());
-        }
-        reader.Close();
-
-        return TrimSnippet(result);
-    }
-
-    // Busca y elimina caracteres invalidos en los bordes del snippet
-    // Pueden existir debido a que se esta trabajando con las posiciones en bytes del documento
-    // Si un caracter especial es picado, quedara un caracter invalido
-    // Ya de paso se eliminarian signos de puntuacion, dejando solo un alfanumerico en el borde
-    static string TrimSnippet(StringBuilder cad) {
-
-        // Trimeando el principio
-        while (StringParser.IsAlphaNum(cad[0]) == '\0') {
-            cad.Remove(0, 1);
-        }
-        // Trimeando el final
-        while (StringParser.IsAlphaNum(cad[cad.Length - 1]) == '\0') {
-            cad.Remove(cad.Length - 1, 1);
-        }
-
-        return cad.ToString();
-    }
-
-    // Calcula los puntos en la vecindad de la palabra
-    // La vecindad ira desde (point - width/4 ; point + width - width/4)
-    static int GetZone(int point, WordPositions positionsStore, int width) {
-        
-        if (positionsStore.Positions.Count == 0) return 1;
-
-        int docSize = positionsStore.Positions.Last();
-        int left, right; // Los limites de la vecindad
-
-        // Calculando los limites
-        if (point - width / 4 < 0) { // Si el punto esta muy al comienzo del doc
-            left = 0;
-            right = width;
-        }
-        else if (point + width - width / 4 >= docSize) { // Si esta muy al final
-            right = docSize - 1;
-            left = docSize - width;
-        }
-        else {
-            left = point - width / 4;
-            right = point + width - width / 4;
-        }
-
-        // Obteniendo los puntos existentes en el rango
-        SortedSet<int> rangeSet = positionsStore.Positions.GetViewBetween(left, right);
-        
-        // Hallando cuantas palabras diferentes existen en el rango
-        HashSet<string> diffWords = new HashSet<string>();
-        foreach (int pos in rangeSet) {
-            diffWords.Add(positionsStore.Words[pos]);
-        }
-
-        return diffWords.Count;
-    }
-
     // Dada la cadena original y los parciales de las sugerencias, genera el string de sugerencias
-    static string GenerateSuggestionString(string[] originalWords, PartialItem[] partials) {
-
+    static string GenerateSuggestionString(ParsedInput input, PartialItem[] partials) {
+        
+        string[] originalWords = input.Words.ToArray();
         // Para cada palabra original, almacena su mejor sugerencia
-        Dictionary<string, Tuple<string, float>> bestSuggestions = new Dictionary<string, Tuple<string, float>>();
+        Dictionary<string, (string, float)> bestSuggestions = new Dictionary<string, (string, float)>();
 
         foreach (var partial in partials) {
 
@@ -514,14 +404,14 @@ public static class SearchEngine {
             // Si existe
             if (pos != -1) {
                 // Determina la distancia entre la palabra original y la sugerencia
-                float distance = SubWords.Distance(originalWords[pos], partial.Word);
+                float distance = ArrayOperations.Distance(originalWords[pos], partial.Word);
                 // Si aun no se han analizado sugerencias para la palabra, se agrega
                 if (!(bestSuggestions.ContainsKey(originalWords[pos]))) {
-                    bestSuggestions[originalWords[pos]] = new Tuple<string, float>(partial.Word, distance);
+                    bestSuggestions[originalWords[pos]] = (partial.Word, distance);
                 }
                 // Si la palabra ya tiene una sugerencia, comprobar si la que tenemos es mejor
                 else if(bestSuggestions[originalWords[pos]].Item2 > distance) {
-                    bestSuggestions[originalWords[pos]] = new Tuple<string, float>(partial.Word, distance);
+                    bestSuggestions[originalWords[pos]] = (partial.Word, distance);
                 }
             }
         }
@@ -532,10 +422,9 @@ public static class SearchEngine {
                 int pos = ArrayOperations.Find(originalWords, replace.Key);
                 originalWords[pos] = replace.Value.Item1;
             }
-            return ArrayOperations.WordsToString(originalWords);
+            return ArrayOperations.WordsToString(originalWords, input);
         }
         else return "@null";
     }
-
     #endregion
 }

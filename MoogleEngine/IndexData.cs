@@ -22,7 +22,7 @@ public class IndexData {
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
 
             StreamReader reader = new StreamReader(files[i]);
-            List<Tuple<string, int>> wordList = GetWords(reader); // Separa todas las palabras del doc
+            List<(string, int)> wordList = GetWords(reader); // Separa todas las palabras del doc
             reader.Close();
             this.Docs.Add(i, files[i]); // Asignar un ID al documento
             
@@ -44,8 +44,6 @@ public class IndexData {
                     //     // Le agrega la palabra original a esta raiz
                     //     this.Roots[root].Add(word.Item1); 
                     // }
-
-                    // GetSubwords(word.Item1);
                 }
                 // Inicializar las ocurrencias en un doc especifico
                 if (!(this.Words[word.Item1].ContainsKey(i))) {
@@ -58,6 +56,10 @@ public class IndexData {
 
         crono.Stop();
         System.Console.WriteLine("✅ Indexado en {0}ms", crono.ElapsedMilliseconds);
+
+        // Ordenando el diccionario por longitud de palabras
+        // this.Words = this.Words.OrderBy(x => x.Key.Length).ToDictionary(x => x.Key, x => x.Value);
+        // System.Console.WriteLine("✅ Palabras ordenadas por longitud");
 
         // LoadSynonyms();
         // System.Console.WriteLine("✅ Sinonimos guardados");
@@ -79,8 +81,8 @@ public class IndexData {
     public Dictionary<string, List<string>> Synonyms { get; private set; }
 
     // Devuelve la lista de las palabras existentes y su ubicacion
-    List<Tuple<string, int>> GetWords(StreamReader reader) {
-        List<Tuple<string, int>> result = new List<Tuple<string, int>> (); // <palabra, posicionDeInicio>
+    List<(string, int)> GetWords(StreamReader reader) {
+        List<(string, int)> result = new List<(string, int)> (); // <palabra, posicionDeInicio>
 
         // Aqui se ira almacenando cada palabra
         StringBuilder temp = new StringBuilder();
@@ -95,7 +97,7 @@ public class IndexData {
             }
             else { // Si no, agrega la palabra formada a la lista y continua a la siguiente
                 if (temp.Length > 0) { // Para controlar el caso de dos caracteres no alfanumericos juntos
-                    result.Add(new Tuple<string, int> (temp.ToString(), start));
+                    result.Add((temp.ToString(), start));
                 }
                 // Avanza la posicion inicial en la cantidad de bytes de la palabra que se agrego
                 // Mas cualquier caracter no alfanumerico que aparezca
@@ -106,25 +108,10 @@ public class IndexData {
 
         // Agregando la ultima palabra
         if (temp.Length != 0) {
-            result.Add(new Tuple<string, int> (temp.ToString(), start));
+            result.Add((temp.ToString(), start));
         }
 
         return result;
-    }
-
-    // Metodo para insertar las subpalabras derivadas de la palabra dada
-    void GetSubwords(string word) {
-        
-        // Genera las derivadas de la palabra
-        List<string> derivates = SubWords.GetDerivates(word);
-        // Recorre cada una y las va insertando
-        foreach (string subword in derivates) {
-            
-            if (!(this.Variations.ContainsKey(subword))) {
-                this.Variations[subword] = new List<string>();
-            }
-            this.Variations[subword].Add(word);
-        }
     }
 
     // Carga todos los sinonimos en Thesaurus.csv y los guarda en Synonyms

@@ -49,15 +49,15 @@ public class ParsedInput {
     }
 
     // Devuelve un arreglo con las palabras que tengan operador * y su cantidad
-    public Tuple<string, int>[] MultipliedWords {
+    public (string, int)[] MultipliedWords {
         get {
-            List<Tuple<string, int>> result = new List<Tuple<string, int>>();
+            List<(string, int)> result = new List<(string, int)>();
 
             for (int i = 0; i < this.Words.Count; i++) {
 
                 int mult = this.Operators[i].Count(x => x == '*');
                 if (mult > 0) {
-                    result.Add(new Tuple<string, int>(this.Words[i], mult));
+                    result.Add((this.Words[i], mult));
                 }
             }
             return result.ToArray();
