@@ -15,7 +15,13 @@ public static class SearchEngine {
     static int suggestionsByWord = 3;
 
     // Si una sugerencia genera al menos estos resultados, no se agregaran mas sugerencias a la busqueda
-    static int resultsWithSuggestion = 5;
+    static int resultsWithSuggestion = 10;
+
+    // La mayor diferencia de longitudes permitida entre una palabra y su sugerencia
+    static int maxCharDiff = 3;
+
+    // La mayor distancia de Lev. permitida entre una palabra y su sugerencia
+    static int maxDistance = 5;
 
     #region Metodos publicos
 
@@ -31,21 +37,7 @@ public static class SearchEngine {
         // Para guardar los parciales de las mismas raices y sugerencias
         List<PartialItem> lowerResults = new List<PartialItem>();
 
-        // Generando las sugerencias si la palabra no existe
-        if (!(data.Words.ContainsKey(word))) {
-            
-            List<(string, float)> suggestions = GetSuggestions(data, word);
-            // Si existen sugerencias
-            if (suggest && suggestions.Count > 0) {
-                // Hallar los parciales de cada una
-                foreach (var suggestion in suggestions) {
-                    lowerResults.AddRange(GetOneWord(data, suggestion.Item1, false, suggestion.Item2, word, true));
-                    // Si se considera que se hayaron suficientes sugerencias, no agregar mas
-                    if (lowerResults.Count >= resultsWithSuggestion) break;
-                }
-            }
-        }
-        else {
+        if (data.Words.ContainsKey(word)) {
             Dictionary<int, Occurrences> info = data.Words[word];
             foreach (var doc in info) {
                 items.Add(new PartialItem(word, doc.Key, multiplier, original));
@@ -281,50 +273,52 @@ public static class SearchEngine {
     // Genera las mejores sugerencias para una palabra. Devuelve la palabra y el multiplicador
     static List<(string, float)> GetSuggestions(IndexData data, string word) {
 
-        // Aqui van todas las derivadas de 'word'
-        List<string> derivates = SubWords.GetDerivates(word);
-        // Aqui se acumulara el score total de cada sugerencia para determinar la mejor
-        // Dicho score tendra en cuenta el parecido con la palabra original usando Esit Distance
-        Dictionary<string, float> cumulativeWord = new Dictionary<string, float>();
-        
-        // Buscando entre cada derivada
-        foreach (string subword in derivates) {
-            if (data.Variations.ContainsKey(subword)) {
-                // Buscando entre cada posible origen de la derivada actual
-                foreach (string possibleOrigin in data.Variations[subword]) {
-                    // Verificando que no sugiera la palabra original
-                    if (word != possibleOrigin) {
-                        // Hallando la distancia entre la palabra escrita y la sugerencia
-                        float priority = 1.0f - SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length, possibleOrigin.Length);
-                        // Calculando los TF-IDF de la sugerencia en cada doc
-                        if (!(cumulativeWord.ContainsKey(possibleOrigin))) {
-                            cumulativeWord[possibleOrigin] = priority;
-                        }
-                        else {
-                            cumulativeWord[possibleOrigin] += priority;
-                        }
-                    }
-                }
+        // Aqui van las palabras de longitud cercana a la palabra
+        List<string> closeWords = new List<string>();
+        // Obtiene la posicion de una palabra de longitud igual a word.Length - 3
+        int lowLengthPos = GetLengthInDict(data, word.Length - maxCharDiff, 0, data.Words.Count);
+
+        // Aqui se acumulara el score de cada sugerencia para determinar la mejor
+        // Dicho score tendra en cuenta el parecido con la palabra original usando Edit Distance
+        List<(string, float)> suggestionsPriority = new List<(string, float)>();
+
+        if (lowLengthPos == int.MaxValue) return suggestionsPriority;
+
+        // Busca las palabras de longitud cercana a word
+        foreach (var dictWord in data.Words.Skip(lowLengthPos)) {
+            // Si se supera la longitud por mucho, no seguir buscando
+            if (dictWord.Key.Length - word.Length > maxCharDiff) break;
+            if (word != dictWord.Key) {
+                // Hallando la distancia entre la palabra escrita y la sugerencia
+                float distance = ArrayOperations.Distance(dictWord.Key, word);
+                if (distance > maxDistance) continue;
+                suggestionsPriority.Add((dictWord.Key, 1.0f / distance));
             }
         }
+
         // Ordenando las sugerencias por su parecido a la palabra
-        var suggestions = cumulativeWord.OrderByDescending(x => x.Value).ToList();
+        var suggestions = suggestionsPriority.OrderByDescending(x => x.Item2).ToList();
         // Aqui iran las sugerencias resultantes
         List<(string, float)> result = new List<(string, float)>();
 
-        int i = 0; // Para contar cuantas sugerencias se enviaran
-        foreach (var suggestion in suggestions) {
-            
-            if (i == suggestionsByWord) break;
-
-            string finalWord = suggestion.Key;
-            float finalMult = 1.0f / SubWords.Distance(finalWord, word);
-            result.Add((finalWord, finalMult));
-
-            i++;
+        for (int i = 0; i < suggestionsByWord && i < suggestions.Count; i++) {
+            result.Add(suggestions[i]);
         }
-        // Ordenando y devolviendo las sugerencias finales
-        return result.OrderByDescending(x => x.Item2).ToList();
+
+        return result;
+    }
+    
+    // Busqueda binaria para hallar una palabra de cierta longitud en la data de palabras
+    static int GetLengthInDict(IndexData data, int length, int i, int j) {
+
+        if (i > j) return int.MaxValue;
+
+        int mid = (i + j) / 2;
+        int currentLength = data.Words.ElementAt(mid).Key.Length;
+
+        if (currentLength == length) return mid;
+        else if (currentLength > length) return GetLengthInDict(data, length, i, mid - 1);
+        else return GetLengthInDict(data, length, mid + 1, j);
     }
 
     // Para buscar los resultados de las palabras con la misma raiz
@@ -343,7 +337,7 @@ public static class SearchEngine {
             foreach (string possibleOrigin in data.Roots[root]) {
                 if (word != possibleOrigin) {
                     // Distancia entre la nueva palabra y la original
-                    float priority = 1.0f - SubWords.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
+                    float priority = 1.0f - ArrayOperations.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
                     // Buscando la nueva palabra en cada documento
                     List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, false, priority * 0.1f));
                     results.AddRange(newResults);
@@ -408,7 +402,7 @@ public static class SearchEngine {
             // Si existe
             if (pos != -1) {
                 // Determina la distancia entre la palabra original y la sugerencia
-                float distance = SubWords.Distance(originalWords[pos], partial.Word);
+                float distance = ArrayOperations.Distance(originalWords[pos], partial.Word);
                 // Si aun no se han analizado sugerencias para la palabra, se agrega
                 if (!(bestSuggestions.ContainsKey(originalWords[pos]))) {
                     bestSuggestions[originalWords[pos]] = (partial.Word, distance);

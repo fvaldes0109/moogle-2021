@@ -44,8 +44,6 @@ public class IndexData {
                         // Le agrega la palabra original a esta raiz
                         this.Roots[root].Add(word.Item1); 
                     }
-
-                    GetSubwords(word.Item1);
                 }
                 // Inicializar las ocurrencias en un doc especifico
                 if (!(this.Words[word.Item1].ContainsKey(i))) {
@@ -58,6 +56,10 @@ public class IndexData {
 
         crono.Stop();
         System.Console.WriteLine("✅ Indexado en {0}ms", crono.ElapsedMilliseconds);
+
+        // Ordenando el diccionario por longitud de palabras
+        this.Words = this.Words.OrderBy(x => x.Key.Length).ToDictionary(x => x.Key, x => x.Value);
+        System.Console.WriteLine("✅ Palabras ordenadas por longitud");
 
         LoadSynonyms();
         System.Console.WriteLine("✅ Sinonimos guardados");
@@ -110,21 +112,6 @@ public class IndexData {
         }
 
         return result;
-    }
-
-    // Metodo para insertar las subpalabras derivadas de la palabra dada
-    void GetSubwords(string word) {
-        
-        // Genera las derivadas de la palabra
-        List<string> derivates = SubWords.GetDerivates(word);
-        // Recorre cada una y las va insertando
-        foreach (string subword in derivates) {
-            
-            if (!(this.Variations.ContainsKey(subword))) {
-                this.Variations[subword] = new List<string>();
-            }
-            this.Variations[subword].Add(word);
-        }
     }
 
     // Carga todos los sinonimos en Thesaurus.csv y los guarda en Synonyms
