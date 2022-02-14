@@ -5,50 +5,56 @@ namespace MoogleEngine;
 public static class Stemming {
 
     // Pronombres del paso 0 del stemming
-    static string[] pronouns = new string[] { "me", "se", "sela", "selo", "selas", "selos", "la", "le",
-                                              "lo", "las", "les", "los", "nos", "te", "os", "telo",
-                                              "tela", "telos", "telas", "melo", "mela", "melos", "melas",
-                                              "noslo", "nosla", "noslos", "noslas", "oslo", "osla",
-                                              "oslos", "oslas" };
+    static string[] pronouns = new string[] { "noslos", "noslas", "telos", "telas", "melos", "melas", 
+                                              "noslo", "nosla", "oslos", "oslas", "selas", "selos",
+                                              "sela", "selo", "telo", "tela", "melo", "mela", "oslo",
+                                              "osla", "las", "les", "los", "nos", "la", "le", "lo",
+                                              "te", "os", "me", "se" };
 
     // Previos a los pronombres
-    static string[] prePronounA = new string[] { "iéndo", "ándo", "ár", "ér", "ír", "án", "én", "é", "á", "ád" };
-    static string[] prePronounB = new string[] { "iendo", "ando", "ar", "er", "ir", "an", "en", "e", "a", "ad" };
+    static string[] prePronounA = new string[] { "iéndo", "ándo", "ár", "ér", "ír", "án", "én", "ád", "é", "á" };
+    static string[] prePronounB = new string[] { "iendo", "ando", "ar", "er", "ir", "an", "en", "ad", "e", "a" };
     static string[] prePronounC = new string[] { "yendo" };
 
     // Sufijos estandares del paso 1
-    static string[] standSuffA = new string[] { "anza", "anzas", "ico", "ica", "icos", "icas", "ismo",
-    "ismos", "able", "ables", "ible", "ibles", "ista", "istas", "oso", "osa", "osos", "osas", "amiento",
-    "amientos", "imiento", "imientos", "ero", "era", "eros", "eras" };
-    static string[] standSuffB = new string[] { "adora", "ador", "ación", "adoras", "adores", "aciones",
-    "ante", "antes", "ancia", "ancias" };
-    static string[] standSuffC = new string[] { "logía", "logías" };
-    static string[] standSuffD = new string[] { "ucion", "uciones" };
-    static string[] standSuffE = new string[] { "encia", "encias" };
+    static string[] standSuffA = new string[] { "amientos", "imientos", "amiento", "imiento", "ismos",
+                                                "anzas", "ables", "ibles", "istas", "anza", "icos", "icas",
+                                                "able",  "ible",  "ista", "osos", "osas", "eros", "eras",
+                                                "ismo", "ico", "ica", "oso", "osa", "ero", "era" };
+       
+    static string[] standSuffB = new string[] { "aciones", "adoras", "adores", "ancias", "adora", "ación",
+                                                "antes", "ancia", "ador", "ante" };
+    static string[] standSuffC = new string[] { "logías", "logía" };
+    static string[] standSuffD = new string[] { "uciones", "ución" };
+    static string[] standSuffE = new string[] { "encias", "encia" };
     static string[] standSuffF = new string[] { "amente" };
     static string[] standSuffF1 = new string[] { "os", "ic", "ad" };
     static string[] standSuffG = new string[] { "mente" };
     static string[] standSuffG1 = new string[] { "ante", "able", "ible" };
-    static string[] standSuffH = new string[] { "idad", "idades" };
+    static string[] standSuffH = new string[] { "idades", "idad" };
     static string[] standSuffH1 = new string[] { "abil", "ic", "iv" };
-    static string[] standSuffI = new string[] { "iva", "ivo", "ivas", "ivos" };
-    static string[] standSuffJ = new string[] { "ion", "iones", "or", "ores" };
+    static string[] standSuffI = new string[] { "ivas", "ivos", "iva", "ivo" };
+    static string[] standSuffJ = new string[] { "iones", "ores", "ion", "or" };
     static string[] standSuffK = new string[] { "ente" };
 
     // Sufijos verbales del paso 2
-    static string[] verbsY = new string[] { "ya", "ye", "yan", "yen", "yeron", "yendo", "yo", "yó", 
-    "yas", "yes", "yais", "yáis", "yamos" };
-    static string[] verbsB1 = new string[] { "en", "es", "éis", "emos", "émonos", "émosle", "émosles",
-    "émoslo", "émoslos", "émosla", "émoslas" };
-    static string[] verbsB2 = new string[] { "arían", "arías", "arán", "arás", "aríais", "aría", "aréis",
-    "aríamos", "aremos", "ará", "aré", "erían", "erías", "erán", "erás", "eríais", "ería", "eréis",
-    "eríamos", "eremos", "erá", "eré", "irían", "irías", "irías", "irán", "irás", "iríais", "iría",
-    "iréis", "iríamos", "iremos", "irá", "iré", "aba", "ada", "ida", "ía", "ara", "are", "iera", "ad",
-    "ed", "id", "ase", "iese", "aste", "iste", "an", "aban", "ían", "aran", "ieran", "asen", "iesen",
-    "aron", "ieron", "ado", "ido", "ando", "iendo", "ió", "ar", "er", "ir", "as", "abas", "adas", "idas",
-    "ías", "aras", "ares", "ieras", "ases", "ieses", "ís", "áis", "abais", "íais", "arais", "ierais",
-    "aseis", "ieseis", "asteis", "isteis", "ados", "idos", "amos", "ábamos", "íamos", "imos", "áramos",
-    "áremos", "iéramos", "iésemos", "ásemos", "an", "án" };
+    static string[] verbsY = new string[] { "yeron", "yendo", "yamos", "yais", "yáis", "yas", "yes", "yan", "yen",                                    
+                                            "ya", "ye", "yo", "yó" };
+    static string[] verbsB1 = new string[] { "émosles", "émoslos", "émoslas", "émosle", "émoslo", "émosla",
+                                             "émonos", "emos", "éis", "en", "es" };
+    static string[] verbsB2 = new string[] { "aríamos", "eríamos", "iríamos", "iéramos", "iésemos", "aríais",
+                                             "aremos", "eríais", "eremos", "iríais", "iremos", "ierais",
+                                             "ieseis", "asteis", "isteis", "ábamos", "áramos", "áremos",
+                                             "ásemos", "arían", "arías", "aréis", "erían", "erías", "eréis",
+                                             "irían", "irías", "irías", "iréis", "ieran", "iesen", "ieron",
+                                             "iendo", "ieras", "ieses", "abais", "arais", "aseis", "íamos",
+                                             "arán", "arás", "aría", "erán", "erás", "ería", "irán", "irás",
+                                             "iría", "iera", "iese", "aste", "iste", "aban", "aran", "asen",
+                                             "ando", "aron", "abas", "adas", "idas", "aras", "ares", "ases",
+                                             "íais", "ados", "idos", "amos", "imos", "ará", "aré", "erá",
+                                             "eré", "irá", "iré", "aba", "ada", "ida", "ara", "are", "ase",
+                                             "ían", "ado", "ido", "ías", "áis", "ía", "ad", "ed", "id", "an",
+                                             "ió", "ar", "er", "ir", "as", "ís", "an", "án" };
 
     // Sufijos residuales del paso 3
     static string[] residual = new string[] { "os", "a", "o", "í", "ó", "á" };
@@ -286,18 +292,15 @@ public static class Stemming {
         return StringParser.ParseAccents(result.ToString());
     }
 
-    // Dada una palabra y una lista de sufijos, devuelve el mayor sufijo
+    // Dada una palabra y una lista de sufijos ordenados por longitud, devuelve el mayor sufijo
     static string LongestSuffix(string word, string[] suffixes) {
         
-        int maxLen = 0;
-        string maxSuff = "";
         foreach (string suffix in suffixes) {
-            if (suffix.Length > maxLen && word.EndsWith(suffix)) {
-                maxLen = suffix.Length;
-                maxSuff = suffix;
+            if (word.EndsWith(suffix)) {
+                return suffix;
             }
         }
-        return maxSuff;
+        return "";
     }
 
     // Sobrecarga con StringBuilder
@@ -305,14 +308,11 @@ public static class Stemming {
         
         string strWord = word.ToString();
 
-        int maxLen = 0;
-        string maxSuff = "";
         foreach (string suffix in suffixes) {
-            if (suffix.Length > maxLen && strWord.EndsWith(suffix)) {
-                maxLen = suffix.Length;
-                maxSuff = suffix;
+            if (strWord.EndsWith(suffix)) {
+                return suffix;
             }
         }
-        return maxSuff;
+        return "";
     }
 }
