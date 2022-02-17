@@ -74,36 +74,30 @@ public static class ArrayOperations {
         return positions.ToArray();
     }
 
-    static float[,] memo = new float[0,0];
+    static int[,] memo = new int[0,0];
     static bool[,] mk = new bool[0,0];
     // Devuelve las diferencias entre dos palabras (caracteres distintos o diferencia de longitud)
-    public static float Distance(string a, string b) {
+    public static int Distance(string a, string b) {
         
         int m = a.Length;
         int n = b.Length;
-        memo = new float[m + 1, n + 1];
+        memo = new int[m + 1, n + 1];
         mk = new bool[m + 1, n + 1];
 
         return EditDistance(a, b, m, n);
     }
 
     // Algoritmo Edit Distance para calcular las diferencias entre dos palabras
-    static float EditDistance(string a, string b, int i, int j) {
+    static int EditDistance(string a, string b, int i, int j) {
 
         if (i == 0) return j;
         if (j == 0) return i;
         if (mk[i, j]) return memo[i, j];
 
         mk[i, j] = true;
-
-        if (a[i - 1] == b[j - 1]) {
-            memo[i, j] = EditDistance(a, b, i - 1, j - 1);
-            return memo[i, j];
-        }
-        else {
-            // Se le dara menos costo a la edicion de un caracter
-            memo[i, j] = 1.0f + Math.Min(EditDistance(a, b, i - 1, j - 1), Math.Min(EditDistance(a, b, i - 1, j), EditDistance(a, b, i, j - 1)));
-            return memo[i, j];
-        }
+        if (a[i - 1] == b[j - 1]) memo[i, j] = EditDistance(a, b, i - 1, j - 1);
+        else 
+            memo[i, j] = 1 + Math.Min(EditDistance(a, b, i - 1, j - 1), Math.Min(EditDistance(a, b, i - 1, j), EditDistance(a, b, i, j - 1)));
+        return memo[i, j];
     }
 }
