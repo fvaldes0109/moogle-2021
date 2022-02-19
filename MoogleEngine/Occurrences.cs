@@ -4,11 +4,9 @@ namespace MoogleEngine;
 public class Occurrences {
     
     float tfidf;
-    List<int> startPos = new List<int> ();
     
-    // Agrega una ocurrencia de la en el documento
-    public void Push(int startPos) { 
-        this.startPos.Add(startPos);
+    public Occurrences() {
+        this.StartPos = new List<int>();
     }
 
     // La relevancia de la palabra en este documento
@@ -23,5 +21,5 @@ public class Occurrences {
     } 
 
     // Posiciones iniciales (en bytes) de cada ocurrencia
-    public List<int> StartPos { get { return this.startPos; } }
+    public List<int> StartPos { get; private set; }
 }

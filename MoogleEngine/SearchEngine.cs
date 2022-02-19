@@ -276,9 +276,6 @@ public static class SearchEngine {
     // Genera las mejores sugerencias para una palabra. Devuelve la palabra y el multiplicador
     static List<(string, float)> GetSuggestions(IndexData data, string word) {
 
-        // Aqui van las palabras de longitud cercana a la palabra
-        List<string> closeWords = new List<string>();
-
         // Aqui se acumulara el score de cada sugerencia para determinar la mejor
         // Dicho score tendra en cuenta el parecido con la palabra original usando Edit Distance
         List<(string, float)> suggestionsPriority = new List<(string, float)>();

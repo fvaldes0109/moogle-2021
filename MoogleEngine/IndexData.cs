@@ -14,7 +14,6 @@ public class IndexData {
 
         this.Words = new Dictionary<string, Dictionary<int, Occurrences>>();
         this.Docs = new Dictionary<int, string>();
-        this.Variations = new Dictionary<string, List<string>>();
         this.Roots = new Dictionary<string, List<string>>();
         this.Synonyms = new Dictionary<string, List<string>>();
 
@@ -50,7 +49,7 @@ public class IndexData {
                     this.Words[word.Item1][i] = new Occurrences();
                 }
                 // Agrega una nueva ocurrencia de la palabra en el doc
-                this.Words[word.Item1][i].Push(word.Item2); 
+                this.Words[word.Item1][i].StartPos.Add(word.Item2); 
             }
         }
 
@@ -70,9 +69,6 @@ public class IndexData {
 
     // Asignar un ID unico a cada documento
     public Dictionary<int, string> Docs { get; private set; }
-
-    // Cada palabra recortada apunta a su palabra original
-    public Dictionary<string, List<string>> Variations { get; private set; }
 
     // Cada raiz apunta a sus palabras de origen
     public Dictionary<string, List<string>> Roots { get; private set; }
