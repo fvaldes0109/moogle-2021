@@ -53,7 +53,7 @@ public static class SearchEngine {
         items.AddRange(lowerResults);
 
         // Si hay muy pocos resultados, generar sugerencias
-            if (suggest && PartialItem.CountDocuments(items) < minAcceptable || !data.Words.ContainsKey(word)) {
+            if (suggest && (PartialItem.CountDocuments(items) < minAcceptable || !data.Words.ContainsKey(word))) {
                 
                 List<(string, float)> suggestions = GetSuggestions(data, word);
 
@@ -105,8 +105,8 @@ public static class SearchEngine {
 
         // Aqui va la lista de resultados
         List<SearchItem> items = new List<SearchItem>();
-        // Aqui van las palabras encontradas en los documentos. Se usara para las sugerencias
-        HashSet<PartialItem> suggestedWords = new HashSet<PartialItem>();
+        // Aqui van las palabras encontradas en los documentos. Sirve para generar el string de sugerencias
+        List<PartialItem> suggestedWords = new List<PartialItem>();
 
         bool hasRelevant = false; // Indicador de si en los resultados hay docs de alta relevancia
         // Procesando cada documento a mostrar
@@ -185,6 +185,14 @@ public static class SearchEngine {
 
             int Id = partial.Document;
 
+            // Aplicando los multiplicadores del operador *
+            foreach (var pair in multipliedWords) {
+                // Si estamos analizando la misma palabra
+                if (pair.Item1 == partial.Word) {
+                    partial.Multiply(pair.Item2 + 1);
+                }
+            }
+
             // Si el documento ya se calculo
             if (memo.ContainsKey(Id)) {
                 // Si no fue descartado, colocar el parcial en los resultados
@@ -219,24 +227,20 @@ public static class SearchEngine {
             
             if (flag) { // Si no es false, todas las palabras requeridas estan. Lo usaremos
 
-                // Aplicando los multiplicadores del operador *
-                foreach (var pair in multipliedWords) {
-
-                    // Si estamos analizando la misma palabra
-                    if (pair.Item1 == partial.Word) {
-                        partial.Multiply((float)(Math.Pow(pair.Item2 + 1, 2)));
-                    }
-                }
-
                 // Aplicando los operadores ~
                 int maxMult = 1; // Multiplicador que se aplicara al documento
                 foreach (var wordSet in closerWords) { // Analizando cada grupo de palabras
+                    // Aquí se guardará el mayor multiplicador para este grupo
+                    int groupMult = 1;
+                    // Para saber si el grupo actual contiene palabras relevantes
+                    bool hasRelevant = false;
                     // Para almacenar las posiciones de este grupo de palabras
                     WordPositions wordPositions = new WordPositions(); 
                     foreach (string word in wordSet) {
-
+                        // Si la palabra esta en el documento, insertarla en el wordPositions
                         if (data.Words.ContainsKey(word) && data.Words[word].ContainsKey(Id)) {
                             wordPositions.Insert(word, data.Words[word][Id].StartPos.ToArray());
+                            if (data.Words[word][Id].Relevance > minScore) hasRelevant = true;
                         }
                     }
                     // Si el doc solo contiene una palabra del grupo, ahorrarse la busqueda
@@ -248,10 +252,10 @@ public static class SearchEngine {
                         // Analizando cada posicion con ese diametro
                         foreach (int pos in wordPositions.Positions) {
                             // Si la palabra actual es poco relevante, saltarsela
-                            if (data.Words[wordPositions.Words[pos]][partial.Document].Relevance < minScore) continue;
+                            if (data.Words[wordPositions.Words[pos]][partial.Document].Relevance < minScore && hasRelevant) continue;
                             // Calculando los multiplicadores y guardando el maximo
                             int amount = SnippetOperations.GetZone(pos, wordPositions, closerDiameter[i]);
-                            maxMult = Math.Max(maxMult, (amount - 1) * (closerDiameter.Length - i + 1));
+                            groupMult = Math.Max(groupMult, (amount - 1) * (closerDiameter.Length - i + 1));
                             // Si se hallo un intervalo con todas las palabras, no existe uno mejor
                             if (amount == wordPositions.Differents.Count) {
                                 achievedBest = true;
@@ -259,7 +263,10 @@ public static class SearchEngine {
                             }
                         }
                     }
+                    // Agregando el multiplicador de este grupo al total del operador ~
+                    maxMult *= groupMult;
                 }
+                // Modificando el multiplicador del PartialItem y memoizando
                 partial.Multiply(maxMult);
                 memo[Id] = maxMult;
 

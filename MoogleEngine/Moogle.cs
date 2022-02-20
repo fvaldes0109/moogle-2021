@@ -42,8 +42,10 @@ public static class Moogle
             List<PartialItem> partials = new List<PartialItem> ();
 
             // Agregando las apariciones de cada palabra a una lista
-            foreach (var word in words) {
-                partials.AddRange(SearchEngine.GetOneWord(data, word, true, relatedWords: true));
+            for (int i = 0; i < words.Length; i++) {
+                // Si la palabra tiene un operador !, no se generaran sugerencias ni relacionadas
+                partials.AddRange(SearchEngine.GetOneWord(data, words[i],
+                suggest: !parsedInput.Operators[i].Contains('!'), relatedWords: !parsedInput.Operators[i].Contains('!')));
             }
             // Cruza los resultados de las palabras separadas y obtiene los doc mas relevantes
             List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials, parsedInput, finalResults);
