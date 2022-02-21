@@ -1,9 +1,10 @@
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MoogleEngine;
 
-// Algunas operaciones basicas sobre un array
-public static class ArrayOperations {
+// Algunas operaciones basicas sobre un array y strings
+public static class ArraysAndStrings {
 
     // Busca un string en el arreglo
     public static int Find(string[] array, string word) {
@@ -74,36 +75,73 @@ public static class ArrayOperations {
         return positions.ToArray();
     }
 
-    static float[,] memo = new float[0,0];
+    static int[,] memo = new int[0,0];
     static bool[,] mk = new bool[0,0];
     // Devuelve las diferencias entre dos palabras (caracteres distintos o diferencia de longitud)
-    public static float Distance(string a, string b) {
+    public static int Distance(string a, string b) {
         
         int m = a.Length;
         int n = b.Length;
-        memo = new float[m + 1, n + 1];
+        memo = new int[m + 1, n + 1];
         mk = new bool[m + 1, n + 1];
 
         return EditDistance(a, b, m, n);
     }
 
     // Algoritmo Edit Distance para calcular las diferencias entre dos palabras
-    static float EditDistance(string a, string b, int i, int j) {
+    static int EditDistance(string a, string b, int i, int j) {
 
         if (i == 0) return j;
         if (j == 0) return i;
         if (mk[i, j]) return memo[i, j];
 
         mk[i, j] = true;
+        if (a[i - 1] == b[j - 1]) memo[i, j] = EditDistance(a, b, i - 1, j - 1);
+        else 
+            memo[i, j] = 1 + Math.Min(EditDistance(a, b, i - 1, j - 1), Math.Min(EditDistance(a, b, i - 1, j), EditDistance(a, b, i, j - 1)));
+        return memo[i, j];
+    }
 
-        if (a[i - 1] == b[j - 1]) {
-            memo[i, j] = EditDistance(a, b, i - 1, j - 1);
-            return memo[i, j];
+    // Revisa si es un caracter alfanumerico valido
+    public static char IsAlphaNum(char car) {
+        string c = car.ToString().ToLower();
+        if (char.IsLetterOrDigit(c[0])) {
+            return c[0];
         }
-        else {
-            // Se le dara menos costo a la edicion de un caracter
-            memo[i, j] = 1.0f + Math.Min(EditDistance(a, b, i - 1, j - 1), Math.Min(EditDistance(a, b, i - 1, j), EditDistance(a, b, i, j - 1)));
-            return memo[i, j];
+        return '\0';
+    }
+
+    // Transforma las vocales con acentos en la vocal plana
+    public static string ParseAccents(string word) {
+
+        StringBuilder result = new StringBuilder();
+
+        foreach (char c in word) {
+            char temp = c;
+            switch (temp) {
+                case 'á':
+                    temp = 'a';
+                    break;
+                case 'é':
+                    temp = 'e';
+                    break;
+                case 'í':
+                    temp = 'i';
+                    break;
+                case 'ó':
+                    temp = 'o';
+                    break;
+                case 'ú':
+                    temp = 'u';
+                    break;
+            }
+            result.Append(temp);
         }
+        return result.ToString();
+    }
+
+    // Detecta si una palabra es vocal o no
+    public static bool IsVowel(char c) {
+        return Regex.IsMatch(c.ToString(), "[aeiouáéíóúü]");
     }
 }
