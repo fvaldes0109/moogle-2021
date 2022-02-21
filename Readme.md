@@ -131,6 +131,11 @@ Hasta entonces! 🖖
 
 A partir de aquí irán los detalles que deben especificarse sobre mi trabajo en el proyecto
 
+### Modificaciones al código base
+
+Se agregaron nuevas funcionalidades a la interfaz gráfica, como clickear la sugerencia para buscarla automáticamente, poder visualizar cada documento completo si así lo desea el usuario, o mostrar las palabras significativas para la búsqueda en negrita.  
+Para esto se hicieron dos cambios a la estructura básica de `MoogleEngine`. Uno fue agregar la propiedad `Path` a la clase `SearchItem`, donde se guardará la ruta de cada documento enviado para poder cargarlo desde el Front-End. El otro cambio es enviar el snippet con las palabras relevantes entre `<b>` y `</b>`. En `MoogleServer` se agregó el código necesario para parsear estas etiquetas y mostrar las palabras en negrita.
+
 ### Instrucciones para los sinónimos
 
 En el archivo `Thesaurus.csv` dentro de `MoogleEngine` se almacenará la relación de cada palabra con sus sinónimos. La estructura debe ser la siguiente:  
