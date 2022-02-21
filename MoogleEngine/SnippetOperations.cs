@@ -71,11 +71,11 @@ public static class SnippetOperations {
     static string TrimSnippet(StringBuilder cad) {
 
         // Trimeando el principio
-        while (StringParser.IsAlphaNum(cad[0]) == '\0') {
+        while (ArraysAndStrings.IsAlphaNum(cad[0]) == '\0') {
             cad.Remove(0, 1);
         }
         // Trimeando el final
-        while (StringParser.IsAlphaNum(cad[cad.Length - 1]) == '\0') {
+        while (ArraysAndStrings.IsAlphaNum(cad[cad.Length - 1]) == '\0') {
             cad.Remove(cad.Length - 1, 1);
         }
 
@@ -126,7 +126,7 @@ public static class SnippetOperations {
 
             // Tomando cada palabra            
             string word = item.Word;
-            int[] positions = ArrayOperations.Substrings(result.ToString(), word);
+            int[] positions = ArraysAndStrings.Substrings(result.ToString(), word);
             // Cantidad de ediciones realizadas, para saber en cuanto desplazar las posiciones
             int editions = 0;
             // Iterando por cada posicion

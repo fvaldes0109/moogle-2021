@@ -1,9 +1,10 @@
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MoogleEngine;
 
-// Algunas operaciones basicas sobre un array
-public static class ArrayOperations {
+// Algunas operaciones basicas sobre un array y strings
+public static class ArraysAndStrings {
 
     // Busca un string en el arreglo
     public static int Find(string[] array, string word) {
@@ -99,5 +100,48 @@ public static class ArrayOperations {
         else 
             memo[i, j] = 1 + Math.Min(EditDistance(a, b, i - 1, j - 1), Math.Min(EditDistance(a, b, i - 1, j), EditDistance(a, b, i, j - 1)));
         return memo[i, j];
+    }
+
+    // Revisa si es un caracter alfanumerico valido
+    public static char IsAlphaNum(char car) {
+        string c = car.ToString().ToLower();
+        if (char.IsLetterOrDigit(c[0])) {
+            return c[0];
+        }
+        return '\0';
+    }
+
+    // Transforma las vocales con acentos en la vocal plana
+    public static string ParseAccents(string word) {
+
+        StringBuilder result = new StringBuilder();
+
+        foreach (char c in word) {
+            char temp = c;
+            switch (temp) {
+                case 'á':
+                    temp = 'a';
+                    break;
+                case 'é':
+                    temp = 'e';
+                    break;
+                case 'í':
+                    temp = 'i';
+                    break;
+                case 'ó':
+                    temp = 'o';
+                    break;
+                case 'ú':
+                    temp = 'u';
+                    break;
+            }
+            result.Append(temp);
+        }
+        return result.ToString();
+    }
+
+    // Detecta si una palabra es vocal o no
+    public static bool IsVowel(char c) {
+        return Regex.IsMatch(c.ToString(), "[aeiouáéíóúü]");
     }
 }

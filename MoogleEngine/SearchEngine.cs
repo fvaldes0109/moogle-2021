@@ -302,7 +302,7 @@ public static class SearchEngine {
                 if (dictWord.Key.Length > size) break;
                 if (word != dictWord.Key) {
                     // Hallando la distancia entre la palabra escrita y la sugerencia
-                    int distance = ArrayOperations.Distance(dictWord.Key, word);
+                    int distance = ArraysAndStrings.Distance(dictWord.Key, word);
                     if (distance > maxDistance) continue;
                     suggestionsPriority.Add((dictWord.Key, 1.0f / (float)distance));
                     // Llevando la cuenta de las sugerencias de distancia 1
@@ -352,7 +352,7 @@ public static class SearchEngine {
             foreach (string possibleOrigin in data.Roots[root]) {
                 if (word != possibleOrigin) {
                     // Distancia entre la nueva palabra y la original
-                    float priority = 1.0f - (float)ArrayOperations.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
+                    float priority = 1.0f - (float)ArraysAndStrings.Distance(word, possibleOrigin) / (float)Math.Max(word.Length,possibleOrigin.Length);
                     // Buscando la nueva palabra en cada documento
                     List<PartialItem> newResults = new List<PartialItem>(GetOneWord(data, possibleOrigin, false, priority * 0.1f));
                     results.AddRange(newResults);
@@ -413,11 +413,11 @@ public static class SearchEngine {
         foreach (var partial in partials) {
 
             // Busca cual es la palabra original en el query de la que salio esta sugetencia
-            int pos = ArrayOperations.Find(originalWords, partial.Original);
+            int pos = ArraysAndStrings.Find(originalWords, partial.Original);
             // Si existe
             if (pos != -1) {
                 // Determina la distancia entre la palabra original y la sugerencia
-                int distance = ArrayOperations.Distance(originalWords[pos], partial.Word);
+                int distance = ArraysAndStrings.Distance(originalWords[pos], partial.Word);
                 // Si aun no se han analizado sugerencias para la palabra, se agrega
                 if (!(bestSuggestions.ContainsKey(originalWords[pos]))) {
                     bestSuggestions[originalWords[pos]] = (partial.Word, distance);
@@ -432,10 +432,10 @@ public static class SearchEngine {
         if (bestSuggestions.Count > 0) {
             // Recorrer cada palabra que haya sido modificada
             foreach (var replace in bestSuggestions) {
-                int pos = ArrayOperations.Find(originalWords, replace.Key);
+                int pos = ArraysAndStrings.Find(originalWords, replace.Key);
                 originalWords[pos] = replace.Value.Item1;
             }
-            return ArrayOperations.WordsToString(originalWords, input);
+            return ArraysAndStrings.WordsToString(originalWords, input);
         }
         else return "@null";
     }

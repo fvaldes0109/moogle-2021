@@ -1,12 +1,43 @@
+using System.Text;
+
 namespace MoogleEngine;
 
 // Clase encargada de procesar la query escrita por el usuario
 public class ParsedInput {
 
-    public ParsedInput() {
+    public ParsedInput(string input) {
+
         this.Words = new List<string>();
         this.Operators = new List<string>();
         this.Tildes = new List<bool>();
+
+        StringBuilder word = new StringBuilder();
+        foreach (char c in input) {
+
+            if (c == '!' || c == '^' || c == '*') { // Si el caracter es un operador
+                this.PushOperator(c);
+            }
+            else if (c == '~') { // Si es el operador ~
+                this.PushTilde();
+            }
+
+            char parse = ArraysAndStrings.IsAlphaNum(c);
+
+            if (parse != '\0') { // Si es alfanumerico, agregarlo a la palabra actual
+                word.Append(parse);
+            }
+            else {
+                if (word.Length > 0) { // Si no, termina la palabra y la agrega a la lista
+                    this.Words.Add(word.ToString());
+                    word.Clear();
+                }
+            }
+        }
+        if (word.Length != 0) { // Guardando la ultima palabra
+            this.Words.Add(word.ToString());
+        }
+        
+        this.TrimEnd(); // Eliminando los posibles operadores sobrantes al final y ajustando tamaños
     }
 
     // Las palabras existentes en el query

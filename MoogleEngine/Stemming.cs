@@ -75,7 +75,7 @@ public static class Stemming {
         bool vowelInR1 = false; // Si se encontro la 1ra vocal en R1
         for (int i = 0; i < word.Length; i++) {
 
-            bool vowel = StringParser.IsVowel(word[i]);
+            bool vowel = ArraysAndStrings.IsVowel(word[i]);
             if (vowel) firstVowel = true;
 
             if (!vowel && firstVowel && R1 == word.Length) R1 = i + 1;
@@ -90,8 +90,8 @@ public static class Stemming {
             // Hallando RV
             if (i > 1 && RV == word.Length) {
                 
-                if (!StringParser.IsVowel(word[1]) && vowel) RV = i + 1;
-                else if (StringParser.IsVowel(word[0]) && !vowel) RV = i + 1;
+                if (!ArraysAndStrings.IsVowel(word[1]) && vowel) RV = i + 1;
+                else if (ArraysAndStrings.IsVowel(word[0]) && !vowel) RV = i + 1;
                 else RV = 3;
             }
         }
@@ -154,7 +154,7 @@ public static class Stemming {
 
             if (prevPron != "" && tillSuffix != "") {
                 result.Remove(tillSuffix.Length, suffix.Length);
-                if (prevA != "") result = new StringBuilder(StringParser.ParseAccents(result.ToString()));
+                if (prevA != "") result = new StringBuilder(ArraysAndStrings.ParseAccents(result.ToString()));
             }
         }
 
@@ -289,7 +289,7 @@ public static class Stemming {
 
         #endregion
 
-        return StringParser.ParseAccents(result.ToString());
+        return ArraysAndStrings.ParseAccents(result.ToString());
     }
 
     // Dada una palabra y una lista de sufijos ordenados por longitud, devuelve el mayor sufijo

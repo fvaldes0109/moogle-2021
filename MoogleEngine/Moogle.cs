@@ -32,7 +32,7 @@ public static class Moogle
     public static SearchResult Query(string query) {
 
         // Parseando la entrada para obtener palabras y operadores
-        ParsedInput parsedInput = StringParser.InputParser(query);
+        ParsedInput parsedInput = new ParsedInput(query);
         string[] words = parsedInput.Words.ToArray();
 
         SearchResult result = new SearchResult();
