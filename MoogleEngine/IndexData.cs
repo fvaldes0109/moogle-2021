@@ -16,8 +16,8 @@ public class IndexData {
         this.Docs = new Dictionary<int, string>();
         this.Roots = new Dictionary<string, List<string>>();
         this.Synonyms = new Dictionary<string, List<string>>();
-
-        string[] files = Directory.GetFiles("./Content", "*.txt", SearchOption.AllDirectories);
+        
+        string[] files = Directory.GetFiles(Path.Combine(".", "Content"), "*.txt", SearchOption.AllDirectories);
         for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
 
             StreamReader reader = new StreamReader(files[i]);
