@@ -66,11 +66,19 @@ public static class SearchEngine {
                 }
             }
 
+        items = items.OrderByDescending(x => data.Words[x.Word][x.Document].Relevance * x.Multiplier).ToList();
         return items;
     }
 
     // Devuelve una lista ordenada con documentos a mostrar
-    public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, ParsedInput parsedInput, int amount) {
+    public static List<CumulativeScore> DocsFromPhrase(IndexData data, List<PartialItem> partials, ParsedInput parsedInput, int amount, List<PartialItem> suggestedWords) {
+
+        // Tomando las palabras que salieron por sugerencias
+        foreach (var partial in partials) {
+            if (partial.Original != "") {
+                suggestedWords.Add(partial);
+            }
+        }
 
         List<PartialItem> filtered = FilterByOperators(data, partials, parsedInput);
 
@@ -101,12 +109,11 @@ public static class SearchEngine {
     }
 
     // Genera la lista de resultados finales
-    public static SearchResult GetResults(IndexData data, List<CumulativeScore> docsData, ParsedInput input) {
+    public static SearchResult GetResults(IndexData data, List<CumulativeScore> docsData, ParsedInput input, List<PartialItem> suggestedWords) {
 
         // Aqui va la lista de resultados
         List<SearchItem> items = new List<SearchItem>();
         // Aqui van las palabras encontradas en los documentos. Sirve para generar el string de sugerencias
-        List<PartialItem> suggestedWords = new List<PartialItem>();
 
         bool hasRelevant = false; // Indicador de si en los resultados hay docs de alta relevancia
         // Procesando cada documento a mostrar
@@ -134,11 +141,6 @@ public static class SearchEngine {
             foreach (var partial in docsData[i].Content) {
                 
                 Occurrences occurrences = data.Words[partial.Word][partial.Document];
-
-                // Si la palabra se obtuvo de una sugerencia
-                if (partial.Original != "") {
-                    suggestedWords.Add(partial);
-                }
 
                 // Si es una palabra poco relevante se ignora
                 // Como el documento paso el if anterior esta garantizado que contiene
@@ -244,7 +246,7 @@ public static class SearchEngine {
                         }
                     }
                     // Si el doc solo contiene una palabra del grupo, ahorrarse la busqueda
-                    if (wordPositions.Differents.Count <= 1) continue;
+                    if (wordPositions.Differents <= 1) continue;
 
                     bool achievedBest = false; // Para saber si ya se encontro el mejor rango posible
                     // Analizando cada diametro
@@ -257,7 +259,7 @@ public static class SearchEngine {
                             int amount = SnippetOperations.GetZone(pos, wordPositions, closerDiameter[i]);
                             groupMult = Math.Max(groupMult, (amount - 1) * (closerDiameter.Length - i + 1));
                             // Si se hallo un intervalo con todas las palabras, no existe uno mejor
-                            if (amount == wordPositions.Differents.Count) {
+                            if (amount == wordPositions.Differents) {
                                 achievedBest = true;
                                 break;
                             }
@@ -359,9 +361,6 @@ public static class SearchEngine {
                 }
             }
         }
-
-        // Ordenando los resultados
-        results = results.OrderByDescending(x => data.Words[x.Word][x.Document].Relevance * x.Multiplier).ToList();
         return results;
     }
 

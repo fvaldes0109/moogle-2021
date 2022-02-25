@@ -47,10 +47,14 @@ public static class Moogle
                 partials.AddRange(SearchEngine.GetOneWord(data, words[i],
                 suggest: !parsedInput.Operators[i].Contains('!'), relatedWords: !parsedInput.Operators[i].Contains('!')));
             }
+
+            // Contenedor de las palabras que salieron de sugerencias
+            List<PartialItem> suggestedWords = new List<PartialItem>();
+
             // Cruza los resultados de las palabras separadas y obtiene los doc mas relevantes
-            List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials, parsedInput, finalResults);
+            List<CumulativeScore> partialResults = SearchEngine.DocsFromPhrase(data, partials, parsedInput, finalResults, suggestedWords);
             // Genera los resultados finales
-            result = SearchEngine.GetResults(data, partialResults, parsedInput);
+            result = SearchEngine.GetResults(data, partialResults, parsedInput, suggestedWords);
         }
 
         return result;
