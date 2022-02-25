@@ -124,7 +124,7 @@ public static class SearchEngine {
 
             // Obteniendo el nombre del doc
             string docPath = data.Docs[docID];
-            string[] temp = docPath.Split('/');
+            string[] temp = docPath.Split(new char[] {'/', '\\'}, StringSplitOptions.RemoveEmptyEntries);
             string title = temp[temp.Length - 1].Split('.')[0];
 
             float docScore = docsData[i].TotalScore; // Score del doc
