@@ -44,7 +44,7 @@ public static class SnippetOperations {
         // Si esta muy al final
         else if (pivot + snippetWidth - snippetWidth / 4 >= docSize) {
             right = docSize;
-            left = docSize - snippetWidth;
+            left = Math.Max(0, docSize - snippetWidth);
         }
         else { // Si no esta cerca de los bordes
             left = pivot - snippetWidth / 4;
@@ -98,7 +98,7 @@ public static class SnippetOperations {
         }
         else if (point + width - width / 4 >= docSize) { // Si esta muy al final
             right = docSize - 1;
-            left = docSize - width;
+            left = Math.Max(0, docSize - width);
         }
         else {
             left = point - width / 4;
