@@ -14,13 +14,6 @@ public class ParsedInput {
         StringBuilder word = new StringBuilder();
         foreach (char c in input) {
 
-            if (c == '!' || c == '^' || c == '*') { // Si el caracter es un operador
-                this.PushOperator(c);
-            }
-            else if (c == '~') { // Si es el operador ~
-                this.PushTilde();
-            }
-
             char parse = ArraysAndStrings.IsAlphaNum(c);
 
             if (parse != '\0') { // Si es alfanumerico, agregarlo a la palabra actual
@@ -31,6 +24,13 @@ public class ParsedInput {
                     this.Words.Add(word.ToString());
                     word.Clear();
                 }
+            }
+
+            if (c == '!' || c == '^' || c == '*') { // Si el caracter es un operador
+                this.PushOperator(c);
+            }
+            else if (c == '~') { // Si es el operador ~
+                this.PushTilde();
             }
         }
         if (word.Length != 0) { // Guardando la ultima palabra
