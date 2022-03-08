@@ -98,8 +98,6 @@ public class IndexData {
                 // Avanza la posicion inicial en la cantidad de bytes de la palabra que se agrego
                 // Mas cualquier caracter no alfanumerico que aparezca
                 start += Encoding.Default.GetByteCount(temp.Append(original).ToString());
-                // Parche para documentos que vienen con el caracter de reemplazamiento... Wtf....
-                if ((int)original == 65533) start -= 2;
 
                 temp.Clear();
             }
