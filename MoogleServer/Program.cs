@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
-MoogleEngine.Moogle.Init();
+MoogleEngine.Moogle.Init(args);
+if (args[0] == "index") return;
 
 var builder = WebApplication.CreateBuilder(args);
 

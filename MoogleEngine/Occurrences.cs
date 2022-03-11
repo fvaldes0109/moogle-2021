@@ -21,5 +21,5 @@ public class Occurrences {
     } 
 
     // Posiciones iniciales (en bytes) de cada ocurrencia
-    public List<int> StartPos { get; private set; }
+    public List<int> StartPos { get; set; }
 }

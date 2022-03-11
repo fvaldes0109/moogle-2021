@@ -3,10 +3,15 @@ using System.Diagnostics;
 
 namespace MoogleEngine;
 
-// Clase para almacenar toda la data de los documentos en memoria
+// Clase para almacenar toda la data de los documentos en memoria y en caché
 public class IndexData {
 
-    public IndexData() {
+    // Si al calcular el IDF la razon Frecuencia / TotalDocs da mayor que el valor, se tomara como 1
+    // Esto anula el TF-IDF de las palabras que aparecen en la gran mayoria de los documentos
+    static float percentToNullify = 0.95f;
+
+    // El parametro indica si se desea recorrer los documentos y precalcular y guardar la informacion
+    public IndexData(bool dataCalculate) {
         // Cronometro para saber el tiempo que lleva indexar todo
         Stopwatch crono = new Stopwatch();
         System.Console.WriteLine("Inicio...");
@@ -16,52 +21,92 @@ public class IndexData {
         this.Docs = new Dictionary<int, string>();
         this.Roots = new Dictionary<string, List<string>>();
         this.Synonyms = new Dictionary<string, List<string>>();
-        
-        string[] files = Directory.GetFiles(Path.Combine("..", "Content"), "*.txt", SearchOption.AllDirectories);
-        for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
 
-            StreamReader reader = new StreamReader(files[i]);
-            List<(string, int)> wordList = GetWords(reader); // Separa todas las palabras del doc
-            reader.Close();
-            this.Docs.Add(i, files[i]); // Asignar un ID al documento
-            
-            foreach (var word in wordList) { // Procesa cada palabra del doc
-
-                // Inicializar el diccionario al que apunta cada palabra y obtener su raiz
-                if (!(this.Words.ContainsKey(word.Item1))) {
-
-                    this.Words.Add(word.Item1, new Dictionary<int, Occurrences>());
-
-                    // Generacion de la raiz
-                    string root = Stemming.GetRoot(word.Item1);
-                    // Si la raiz es diferente a la palabra original, agregarla
-                    if (root != ArraysAndStrings.ParseAccents(word.Item1)) {
-                        // Si no se ha usado esta raiz, inicializar su lista
-                        if (!(this.Roots.ContainsKey(root))) {
-                            this.Roots.Add(root, new List<string>());
-                        }
-                        // Le agrega la palabra original a esta raiz
-                        this.Roots[root].Add(word.Item1); 
-                    }
-                }
-                // Inicializar las ocurrencias en un doc especifico
-                if (!(this.Words[word.Item1].ContainsKey(i))) {
-                    this.Words[word.Item1][i] = new Occurrences();
-                }
-                // Agrega una nueva ocurrencia de la palabra en el doc
-                this.Words[word.Item1][i].StartPos.Add(word.Item2); 
+        // Si no se desea precalcular, se cargan los datos en la cache y se asignan a sus respectivas estructuras
+        if (!dataCalculate) {
+            try {
+                this.Docs = CacheManager.LoadDocs();
+                System.Console.WriteLine("✅ Documentos cargados desde la caché");
+                this.Words = CacheManager.LoadWords();
+                System.Console.WriteLine("✅ Palabras cargadas desde la caché");
+                this.Roots = CacheManager.LoadRoots();
+                System.Console.WriteLine("✅ Raíces cargadas desde la caché");
+            }
+            catch (System.Exception) {
+                // Si hubo un error leyendo los datos, se indexara y almacenara todo de nuevo
+                System.Console.WriteLine("🛑 Error en la caché. Calculando...");
+                dataCalculate = true;
             }
         }
+        // Si se desea precalcular, o la carga de informacion anterior fallo
+        if (dataCalculate) {
+
+            string[] files = Directory.GetFiles(Path.Combine("..", "Content"), "*.txt", SearchOption.AllDirectories);
+            for (int i = 0; i < files.Length; i++) { // Iterando por cada documento
+
+                StreamReader reader = new StreamReader(files[i]);
+                List<(string, int)> wordList = GetWords(reader); // Separa todas las palabras del doc
+                reader.Close();
+                this.Docs.Add(i, files[i]); // Asignar un ID al documento
+                
+                foreach (var word in wordList) { // Procesa cada palabra del doc
+
+                    // Inicializar el diccionario al que apunta cada palabra y obtener su raiz
+                    if (!(this.Words.ContainsKey(word.Item1))) {
+
+                        this.Words.Add(word.Item1, new Dictionary<int, Occurrences>());
+
+                        // Generacion de la raiz
+                        string root = Stemming.GetRoot(word.Item1);
+                        // Si la raiz es diferente a la palabra original, agregarla
+                        if (root != ArraysAndStrings.ParseAccents(word.Item1)) {
+                            // Si no se ha usado esta raiz, inicializar su lista
+                            if (!(this.Roots.ContainsKey(root))) {
+                                this.Roots.Add(root, new List<string>());
+                            }
+                            // Le agrega la palabra original a esta raiz
+                            this.Roots[root].Add(word.Item1); 
+                        }
+                    }
+                    // Inicializar las ocurrencias en un doc especifico
+                    if (!(this.Words[word.Item1].ContainsKey(i))) {
+                        this.Words[word.Item1][i] = new Occurrences();
+                    }
+                    // Agrega una nueva ocurrencia de la palabra en el doc
+                    this.Words[word.Item1][i].StartPos.Add(word.Item2); 
+                }
+            }
+
+            // Ordenando el diccionario por longitud de palabras
+            this.Words = this.Words.OrderBy(x => x.Key.Length).ToDictionary(x => x.Key, x => x.Value);
+
+            // Calculando los TF-IDF
+            foreach (var pair in this.Words) {
+                
+                foreach (var doc in pair.Value) {
+
+                    float tf = (float)Math.Log2((float)doc.Value.StartPos.Count + 1);
+                    float idf = (float)Math.Log2((float)(this.Docs.Count) / (float)pair.Value.Count);
+                    // Si la palabra aparece en muchos documentos se le asigna un TF-IDF infinitesimal
+                    doc.Value.Relevance = ((float)pair.Value.Count / (float)this.Docs.Count < percentToNullify ? tf * idf : 0.0f);
+                }
+            }
+
+            System.Console.WriteLine("✅ TF-IDF's calculados");
+
+            // Almacenando todos los datos calculados en la memoria fisica
+            CacheManager.SaveWords(this.Words);
+            CacheManager.SaveDocs(this.Docs);
+            CacheManager.SaveRoots(this.Roots);
+
+            System.Console.WriteLine("✅ Datos almacenados en la caché");
+        }
+
+        LoadSynonyms();
+        System.Console.WriteLine("✅ Sinónimos cargados");
 
         crono.Stop();
         System.Console.WriteLine("✅ Indexado en {0}ms", crono.ElapsedMilliseconds);
-
-        // Ordenando el diccionario por longitud de palabras
-        this.Words = this.Words.OrderBy(x => x.Key.Length).ToDictionary(x => x.Key, x => x.Value);
-        System.Console.WriteLine("✅ Palabras ordenadas por longitud");
-
-        LoadSynonyms();
-        System.Console.WriteLine("✅ Sinonimos guardados");
     }
 
     // Guarda todas las palabras, cada una apuntando a los documentos donde aparece
