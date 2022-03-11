@@ -8,7 +8,7 @@ public static class Moogle
     static IndexData? data;
 
     public static void Init(string[] args) {
-        data = new IndexData(args[0] == "index");
+        data = new IndexData(args.Length > 0 && args[0] == "index");
     }
 
     public static SearchResult Query(string query) {

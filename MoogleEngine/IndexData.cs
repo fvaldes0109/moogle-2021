@@ -77,6 +77,8 @@ public class IndexData {
                 }
             }
 
+            System.Console.WriteLine("✅ Datos indexados en la RAM");
+
             // Ordenando el diccionario por longitud de palabras
             this.Words = this.Words.OrderBy(x => x.Key.Length).ToDictionary(x => x.Key, x => x.Value);
 
