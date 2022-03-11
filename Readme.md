@@ -91,7 +91,7 @@ Si te sirve de algo, hace unos meses contratamos a un gurú de los algoritmos de
 
 ## Sobre la interfaz gráfica
 
-Como verás cuando ejecutes la aplicación (que se explica más abajo), la interfaz gráfica es bastante pobre. En principio, no tienes obligación de trabajar en esta parte del proyecto ( sabemos que ustedes los científicos de la computación están por encima de estas mundeces).
+Como verás cuando ejecutes la aplicación (que se explica más abajo), la interfaz gráfica es bastante pobre. En principio, no tienes obligación de trabajar en esta parte del proyecto (sabemos que ustedes los científicos de la computación están por encima de estas mundeces).
 
 Pero si nos quieres ayudar, eres libre de modificar la interfaz gráfica todo lo que desees, eso sí, siempre que se mantenga la idea original de la aplicación. Si te interesa aprender Blazor, HTML, o CSS, eres libre de jugar con el código de la interfaz gráfica, que está en el proyecto `MoogleServer`.
 
@@ -144,9 +144,20 @@ En el archivo `Thesaurus.csv` dentro de `MoogleEngine` se almacenará la relaci�
 - De ahi en adelante, contendrá: `palabra,sinonimo_a sinonimo_b sinonimo_c` o la cantidad de sinónimos que se deseen. La coma y los espacios deben respetarse.
 - Todas las palabras que aparezcan en una línea deben ser sinónimos entre sí.  
 
+### Mecanismos de caché
+
+Para evitar tener que procesar los documentos en cada ejecución, se implementó una vía para almacenar los datos calculados en la memoria física. Cuando el corpus es modificado, para realizar el precálculo se debe ejecutar:
+
+```bash
+make index #En linux
+dotnet run --project MoogleServer index #En windows
+```
+
+Luego basta con ejecutar `make dev` y el servidor se levantará normalmente. Además, si se ejecuta `make dev` con la caché defectuosa o inexistente, esta se calculará automáticamente recorriendo todos los documentos como si se tratase de un indexado común.
+
 ### Ramas
 
-En la rama `main` se encuentra el proyecto funcional. Las instrucciones de ejecución son las mismas que se especificaron [mas arriba](#ejecutando-el-proyecto). En `testing` se encuentran las herramientas necesarias para realizar ciertos tests. **No se deben mergear los cambios de `testing` en `main`**, esto causaria errores fatales en el funcionamiento de la aplicación. Tampoco se debe ejecutar el `MoogleServer` desde `testing`.
+En la rama `main` se encuentra el proyecto funcional. Las instrucciones de ejecución son las mismas que se especificaron [mas arriba](#ejecutando-el-proyecto), en conjunto con lo referente a la caché. En `testing` se encuentran las herramientas necesarias para realizar ciertos tests. **No se deben mergear los cambios de `testing` en `main`**, esto causaria errores fatales en el funcionamiento de la aplicación. Tampoco se debe ejecutar el `MoogleServer` desde `testing`.
 
 #### Testeo
 

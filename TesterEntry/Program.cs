@@ -10,7 +10,7 @@ public static class Program {
             if (args[0] == "--amount") amount = int.Parse(args[1]);
         }
 
-        Moogle.Init();
+        Moogle.Init(args);
         // Tomando la lista de palabras desde MoogleEngine
         var words = Moogle.FrequentWords();
         int docAmount = Moogle.DocumentAmount();
