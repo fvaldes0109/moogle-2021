@@ -35,6 +35,10 @@ public class IndexData {
             catch (System.Exception) {
                 // Si hubo un error leyendo los datos, se indexara y almacenara todo de nuevo
                 System.Console.WriteLine("🛑 Error en la caché. Calculando...");
+                // Vaciando las estructuras
+                this.Docs = new Dictionary<int, string>();
+                this.Words = new Dictionary<string, Dictionary<int, Occurrences>>();
+                this.Roots = new Dictionary<string, List<string>>();
                 dataCalculate = true;
             }
         }
