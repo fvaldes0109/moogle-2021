@@ -141,8 +141,9 @@ Para esto se hicieron dos cambios a la estructura básica de `MoogleEngine`. Uno
 En el archivo `Thesaurus.csv` dentro de `MoogleEngine` se almacenará la relación de cada palabra con sus sinónimos. La estructura debe ser la siguiente:  
 
 - La primera línea debe contener exactamente la frase `key,synonyms`, para representar los nombres de los campos.  
-- De ahi en adelante, contendrá: `palabra,sinonimo_a sinonimo_b sinonimo_c` o la cantidad de sinónimos que se deseen. La coma y los espacios deben respetarse.
+- De ahi en adelante, contendrá: `palabra,sinónimo segundosinónimo otrosinónimo` o la cantidad de sinónimos que se deseen. La coma y los espacios deben respetarse.
 - Todas las palabras que aparezcan en una línea deben ser sinónimos entre sí.  
+- Todas las palabras deben estar en minúsculas.
 
 ### Mecanismos de caché
 
@@ -161,13 +162,13 @@ En la rama `main` se encuentra el proyecto funcional. Las instrucciones de ejecu
 
 #### Testeo
 
-Al cambiar a la rama `testing` aparecerá el proyecto `TesterEntry`, así como ciertos cambios en `MoogleEngine` para evitar calcular sugerencias, palabras de raiz similar o sinónimos y poder testear más rápidamente. También aparecerá un cambio en el `makefile` para permitir la ejecución. Esta se hará de la siguiente forma:  
+Al cambiar a la rama `testing` aparecerá el proyecto `TesterEntry`, así como ciertos cambios en `MoogleEngine` para evitar calcular ciertos conflictos con el path. También aparecerá un cambio en el `makefile` para permitir la ejecución. Esta se hará de la siguiente forma:  
 
 ```bash
 make test amount=10 #O cualquier otro valor
 ```
 
-Esto mostrará hasta 10 (o el valor que se envíe) grupos de palabras, donde el 1er grupo serán las palabras que aparecen en todos los documentos, el 2do grupo serán las palabras que aparecen en N - 1 documentos, y así hasta el 10mo grupo, el cual tendrá las palabras que aparecen en N - 9 documentos. Cada palabra contendrá información importante como el total de veces que aparece en el set de documentos, o su TF-IDF total entre todos los documentos en que está.  
+Esto mostrará hasta 10 (o el valor que se envíe) grupos de palabras, donde el 1er grupo serán las palabras que aparecen en todos los documentos, el 2do grupo serán las palabras que aparecen en N - 1 documentos, y así hasta el 10mo grupo, el cual tendrá las palabras que aparecen en N - 9 documentos. Cada palabra contendrá información importante como el total de veces que aparece en el set de documentos, o su TF-IDF total entre todos los documentos en que está. Esto es muy útil para determinar el valor que se le debe asignar a la variable `percentToNullify` para poder designar las palabras poco relevantes.
 
 La instrucción de testeo tiene un valor por defecto para el parámetro `amount`, el cual está especificado dentro del `makefile`. Por tanto, es posible ejecutar el tester solo con:
 
